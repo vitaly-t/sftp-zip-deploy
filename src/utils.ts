@@ -1,5 +1,5 @@
 import {Client as SSH2Client, ConnectConfig} from 'ssh2';
-import {createZipArchive, ZipEntry, createGzip, constants} from 'node:zlib';
+import {createZipArchive, ZipEntry} from 'node:zlib';
 import {readFile} from 'node:fs/promises';
 import {createWriteStream} from 'node:fs';
 import {pipeline} from 'node:stream/promises';
@@ -37,15 +37,7 @@ export async function zipFiles(dir: string, files: string[], zipPath: string): P
     }
     const archive = createZipArchive(entries);
     const ws = createWriteStream(zipPath);
-
-    const maxCompressionOptions = {
-        level: constants.Z_BEST_COMPRESSION, // 9 (default is 6)
-        windowBits: 15, // Max 32KB history window (default is 15)
-        memLevel: 9,    // Max internal hash table memory (default is 8)
-        strategy: constants.Z_DEFAULT_STRATEGY,
-    };
-
-    await pipeline(archive, createGzip(maxCompressionOptions), ws);
+    await pipeline(archive, ws);
     return ws.bytesWritten;
 }
 

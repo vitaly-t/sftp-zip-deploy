@@ -54,7 +54,8 @@ So avoid running commands that may trigger an input prompt.
 ## API
 
 The library shares connection options for SFTP / SSH2, and reuses the standard `ConnectOptions` / `ConnectConfig`
-types from the underlying modules.
+types from the underlying modules. If you want to use that type explicitly, you will need to add `@types/ssh2-sftp-client` 
+as a DEV dependency.
 
 The main interface [ISftpZipDeployConfig] has a number of options, including events for providing progress details:
 
