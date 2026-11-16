@@ -62,8 +62,8 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 * [onFilter] - to let you filter files inside distribution folder
 * [onCmdOutput] - to get all output from remote commands
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#67
-[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#61
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#81
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L67
+[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L61
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L81
 
-[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#6
+[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L6
