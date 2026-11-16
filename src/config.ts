@@ -1,27 +1,8 @@
 import {ConnectOptions} from 'ssh2-sftp-client';
 
-export interface IZipDetails {
-    /**
-     * All files placed into zip.
-     */
-    files: string[];
-
-    /**
-     * Local path to the zip file.
-     */
-    zipLocalPath: string;
-
-    /**
-     * Remote path to the zip file.
-     */
-    zipRemotePath: string;
-
-    /**
-     * Zip file size, in bytes.
-     */
-    zipSize: number;
-}
-
+/**
+ * Configuration structure, to be passed into `zipAndDeploy`.
+ */
 export interface ISftpZipDeployConfig {
     /**
      * Connection parameters.
@@ -47,24 +28,33 @@ export interface ISftpZipDeployConfig {
     zipFile?: {
         /**
          * Local directory where zip file is to be created.
+         * Default is './'
          */
         dir?: string,
         /**
-         * Name for the local zip file.
+         * Name for the local zip file. Default is 'release.zip'
          */
         name?: string
     };
 
     /**
-     * Optional command to execute before and/or after deploying zip file.
+     * Optional commands to execute before / after deploying zip file.
      */
     cmd?: {
+        /**
+         * Command(s) to be executed before creating zip file.
+         */
         before?: string,
+        /**
+         * Command(s) to be executed after zip has been deployed.
+         */
         after?: string
     }
 
     /**
-     * Optional filter on file enumeration, returning:
+     * Optional filter on file enumeration (found in `srcDir`),
+     * returning:
+     *
      *  - true for files to be added;
      *  - false for files to be skipped.
      */
@@ -78,6 +68,40 @@ export interface ISftpZipDeployConfig {
 
     /**
      * Notification of every output produced by a remote command.
+     *
+     * @param cmd
+     * Command that produced an output.
+     *
+     * @param err
+     * Set when the output was sent into StdErr, i.e. an error is reported.
+     *
+     * @param std
+     * Set when normal/standard output is generated (not an error).
      */
     onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
+}
+
+/**
+ * For use with onZipReady event.
+ */
+export interface IZipDetails {
+    /**
+     * All files placed into zip.
+     */
+    files: string[];
+
+    /**
+     * Local path to the zip file.
+     */
+    zipLocalPath: string;
+
+    /**
+     * Remote path to the zip file.
+     */
+    zipRemotePath: string;
+
+    /**
+     * Zip file size, in bytes.
+     */
+    zipSize: number;
 }

@@ -50,3 +50,20 @@ await zipAndDeploy({
 Note that we use option `-o` (overwrite) with `unzip`, because otherwise the command may prompt for input,
 if files are already there, and this library does not deal with remote prompts, it will just get stuck.
 So avoid running commands that may trigger an input prompt.
+
+## API
+
+The library shares connection options for SFTP / SHH2, and reuses the standard `ConnectOptions` / `ConnectConfig`
+types from the underlying modules.
+
+The main interface [ISftpZipDeployConfig] has a number of options, including events for providing progress details:
+
+* [onZipReady] - notifies when zip is ready
+* [onFilter] - to let you filter files inside distribution folder
+* [onCmdOutput] - to get all output from remote commands
+
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#67
+[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#61
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#81
+
+[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#6
