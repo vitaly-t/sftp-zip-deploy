@@ -1,6 +1,6 @@
 {
   "name": "sftp-zip-deploy",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +20,12 @@
   "author": {
     "name": "Vitaly Tomilov"
   },
+  "keywords": [
+    "sftp",
+    "shh2",
+    "zip",
+    "deploy"
+  ],
   "engines": {
     "node": ">=26"
   },
