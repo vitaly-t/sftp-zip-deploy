@@ -3,6 +3,7 @@ import {createZipArchive, ZipEntry} from 'node:zlib';
 import {readFile} from 'node:fs/promises';
 import {createWriteStream} from 'node:fs';
 import {pipeline} from 'node:stream/promises';
+import path from 'node:path';
 
 export function connectSSH2Client(client: SSH2Client, cn: ConnectConfig): Promise<SSH2Client> {
     return new Promise((resolve, reject) => {
@@ -29,13 +30,18 @@ export function execSHH2Command(client: SSH2Client, cmd: string, output: (err?: 
 /**
  * Zips list of files, and resolves with the size of the resulting archive (in bytes).
  */
-export async function zipFiles(files: string[], zipPath: string): Promise<number> {
+export async function zipFiles(dir: string, files: string[], zipPath: string): Promise<number> {
     const entries: ZipEntry[] = [];
     for (const f of files) {
-        entries.push(await ZipEntry.create(f, await readFile(f)));
+        const p = path.join(dir, f);
+        entries.push(await ZipEntry.create(f, await readFile(p)));
     }
     const archive = createZipArchive(entries);
     const ws = createWriteStream(zipPath);
     await pipeline(archive, ws);
     return ws.bytesWritten;
+}
+
+export function fixWindowsPath(path: string): string {
+    return path.replace(/\\/g, '/');
 }

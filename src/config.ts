@@ -29,26 +29,26 @@ export interface ISftpZipDeployConfig {
     cn: ConnectOptions;
 
     /**
-     * Source directory.
+     * Source directory (on the local machine).
      */
     srcDir: string;
 
     /**
-     * Destination directory.
+     * Destination directory (on the remote server).
      */
     destDir: string;
 
     /**
-     * Optional path for the zip file.
+     * Optional path for the local zip file.
      */
     zipPath?: string;
 
     /**
-     * Optional remote commands to run before or after zip file has been copied over.
+     * Optional command to execute before and/or after deploying zip file.
      */
-    commands?: {
-        before?: string | string[],
-        after?: string | string[]
+    cmd?: {
+        before?: string,
+        after?: string
     }
 
     /**

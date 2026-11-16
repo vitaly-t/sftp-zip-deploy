@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p src",
-    "start": "tsc -p src && node ./dist/index.js"
+    "start": "tsc -p src && node --no-warnings=ExperimentalWarning=9820 ./dist/index.js"
   },
   "files": [
     "dist"
