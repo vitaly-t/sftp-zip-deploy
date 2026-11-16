@@ -5,12 +5,12 @@
 Simple and efficient way to auto-deploy your project to a server:
 
 - It zips your distribution folder and sends the archive to your server via SFTP
-- It optionally runs remote commands, before / after zip deployment, via SHH2
+- It optionally runs remote commands, before / after zip deployment, via SSH2
 - It provides detailed data about what is going on all the way
 
 **IMPORTANT:**
 
-This library relies on Node-native support for SHH2 and ZIP, and therefore requires Node v26 as minimum.
+This library relies on Node-native support for SSH2 and ZIP, and therefore requires Node v26 as minimum.
 
 ## Install
 
@@ -53,7 +53,7 @@ So avoid running commands that may trigger an input prompt.
 
 ## API
 
-The library shares connection options for SFTP / SHH2, and reuses the standard `ConnectOptions` / `ConnectConfig`
+The library shares connection options for SFTP / SSH2, and reuses the standard `ConnectOptions` / `ConnectConfig`
 types from the underlying modules.
 
 The main interface [ISftpZipDeployConfig] has a number of options, including events for providing progress details:

@@ -13,7 +13,7 @@ export function connectSSH2Client(client: SSH2Client, cn: ConnectConfig): Promis
     });
 }
 
-export function execSHH2Command(client: SSH2Client, cmd: string, output: (err?: Buffer, std?: Buffer) => void): Promise<void> {
+export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: Buffer, std?: Buffer) => void): Promise<void> {
     return new Promise((resolve, reject) => {
         client.exec(cmd, (err, stream) => {
             if (err) {

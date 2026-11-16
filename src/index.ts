@@ -1,7 +1,7 @@
 import {ISftpZipDeployConfig} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
-import {connectSSH2Client, execSHH2Command, fixWindowsPath, zipFiles} from './utils.js';
+import {connectSSH2Client, execSSH2Command, fixWindowsPath, zipFiles} from './utils.js';
 import {globSync} from 'glob';
 import path from 'node:path';
 
@@ -26,7 +26,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
 
     if (before || after) {
         await connectSSH2Client(ssh2Client, cfg.cn);
-        await execSHH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
+        await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
     }
 
     let files = globSync('**/{*.*,.*}', {cwd: cfg.srcDir})
@@ -51,7 +51,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
     await sftp.put(zipLocalPath, zipRemotePath);
 
     if (after) {
-        await execSHH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+        await execSSH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
     }
 
     await sftp.end();
