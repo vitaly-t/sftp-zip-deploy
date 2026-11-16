@@ -17,8 +17,7 @@ export function execSHH2Command(client: SSH2Client, cmd: string, output: (err?: 
     return new Promise((resolve, reject) => {
         client.exec(cmd, (err, stream) => {
             if (err) {
-                reject(err);
-                return;
+                return reject(err);
             }
             stream.once('close', () => resolve());
             stream.on('data', (chunk: Buffer) => output(undefined, chunk));
@@ -42,6 +41,9 @@ export async function zipFiles(dir: string, files: string[], zipPath: string): P
     return ws.bytesWritten;
 }
 
+/**
+ * Fixes Windows path-s, by replacing every '\' with '/'
+ */
 export function fixWindowsPath(path: string): string {
     return path.replace(/\\/g, '/');
 }

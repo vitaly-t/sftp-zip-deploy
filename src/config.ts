@@ -39,9 +39,21 @@ export interface ISftpZipDeployConfig {
     destDir: string;
 
     /**
-     * Optional path for the local zip file.
+     * Optional name + location of the local zip file.
+     *
+     * It defaults to {dir: './', name: 'release.zip'},
+     * to create it in the root of your project.
      */
-    zipPath?: string;
+    zipFile?: {
+        /**
+         * Local directory where zip file is to be created.
+         */
+        dir?: string,
+        /**
+         * Name for the local zip file.
+         */
+        name?: string
+    };
 
     /**
      * Optional command to execute before and/or after deploying zip file.
