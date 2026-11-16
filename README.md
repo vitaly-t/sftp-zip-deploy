@@ -9,6 +9,7 @@ Simple and efficient way to auto-deploy your project to a server:
 - It provides detailed data about what is going on all the way
 
 **IMPORTANT:**
+
 This library relies on Node-native support for SHH2 and ZIP, and therefore requires Node v26 as minimum.
 
 ## Install
@@ -19,10 +20,10 @@ npm i sftp-zip-deploy
 
 ## Usage
 
-In the example below we deploy a NodeJS project into `/root/web` on our remote server.
+In the example below, we deploy a NodeJS project into `/root/web` on our remote server.
 
-Once zip file is deployed, we run commands to set that folder as active, unpack
-the archive locally and install project's dependencies.
+Once zip file is deployed, we run commands to set that folder as active, then unpack
+the archive and install project's dependencies.
 
 ```ts
 import {zipAndDeploy} from 'sftp-zip-deploy';
@@ -31,7 +32,8 @@ await zipAndDeploy({
     srcDir: './dist', // folder with content to deploy
     destDir: '/root/web/', // remote folder to copy our zip file
     zipFile: {
-        name: 'release.zip' // set custom name for the archive
+        name: 'release.zip', // set custom name for the archive
+        dir: './' // we can change where zip is created
     },
     cn: {
         host: '1.2.3.4',
