@@ -1,12 +1,8 @@
 import {ISftpZipDeployConfig} from './config';
 import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
-import {connectSSH2Client, execSHH2Command} from './utils';
-import {createZipArchive, ZipEntry} from 'node:zlib';
-import {createWriteStream} from 'node:fs';
+import {connectSSH2Client, execSHH2Command, zipFiles} from './utils';
 import {globSync} from 'glob';
-import {readFile} from 'node:fs/promises';
-import {pipeline} from 'node:stream/promises';
 
 export {default as ConnectOptions} from 'ssh2-sftp-client';
 
@@ -41,14 +37,10 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
         return false; // nothing to deploy
     }
 
-    const entries: ZipEntry[] = [];
-    for (const src of allFiles) {
-        entries.push(await ZipEntry.create(src, await readFile(src)));
+    const zipSize = await zipFiles(allFiles, 'release.zip');
+    if (typeof cfg.onZipReady === 'function') {
+        cfg.onZipReady({files: allFiles, zipSize, zipLocalPath: '', zipRemotePath: ''});
     }
-
-    const archive = createZipArchive(entries);
-    const ws = createWriteStream('release.zip');
-    await pipeline(archive, ws);
 
     const sftp = new SftpClient();
     await sftp.connect(cfg.cn);
@@ -69,4 +61,3 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
     ssh2Client.end();
     return true;
 }
-

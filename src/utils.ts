@@ -1,4 +1,8 @@
 import {Client as SSH2Client, ConnectConfig} from 'ssh2';
+import {createZipArchive, ZipEntry} from 'node:zlib';
+import {readFile} from 'node:fs/promises';
+import {createWriteStream} from 'node:fs';
+import {pipeline} from 'node:stream/promises';
 
 export function connectSSH2Client(client: SSH2Client, cn: ConnectConfig): Promise<SSH2Client> {
     return new Promise((resolve, reject) => {
@@ -20,4 +24,18 @@ export function execSHH2Command(client: SSH2Client, cmd: string, output: (err?: 
             stream.stderr.on('data', (chunk: Buffer) => output(chunk, undefined));
         });
     });
+}
+
+/**
+ * Zips list of files, and resolves with the size of the resulting archive (in bytes).
+ */
+export async function zipFiles(files: string[], zipPath: string): Promise<number> {
+    const entries: ZipEntry[] = [];
+    for (const f of files) {
+        entries.push(await ZipEntry.create(f, await readFile(f)));
+    }
+    const archive = createZipArchive(entries);
+    const ws = createWriteStream(zipPath);
+    await pipeline(archive, ws);
+    return ws.bytesWritten;
 }
