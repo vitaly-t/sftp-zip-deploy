@@ -4,11 +4,24 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "tsc && node ./src/index.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/vitaly-t/sftp-zip-deploy.git"
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=26"
+  },
+  "dependencies": {
+    "glob": "14.0.6",
+    "ssh2-sftp-client": "12.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "@types/ssh2-sftp-client": "9.0.6",
+    "typescript": "6.0.3"
+  }
 }

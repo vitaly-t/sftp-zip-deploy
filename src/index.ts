@@ -1,155 +1,86 @@
-interface IDeployArguments {
+import {ISftpZipDeployConfig} from './config';
+import SftpClient from 'ssh2-sftp-client';
+import {Client as SSH2Client} from 'ssh2';
+import {connectSSH2Client, execSHH2Command} from './utils';
+import {createZipArchive, ZipEntry} from 'node:zlib';
+import {createWriteStream} from 'node:fs';
+import {globSync} from 'glob';
+import {readFile} from 'node:fs/promises';
+import {pipeline} from 'node:stream/promises';
 
-    /**
-     * Search-file pattern override.
-     */
-    pattern: string;
+export {default as ConnectOptions} from 'ssh2-sftp-client';
 
-    /**
-     * To output all comm-s diagnostics into the console.
-     */
-    debug: boolean;
+export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> {
 
-    /**
-     * To pull the top-level list of files/folders from the server,
-     * just to see what's there at the moment and check the connection.
-     */
-    list: boolean;
+    const ac = cfg.commands?.after ?? [];
+    const afterCommands = (Array.isArray(ac) ? ac : [ac]);
+    const bc = cfg.commands?.before ?? [];
+    const beforeCommands = (Array.isArray(bc) ? bc : [bc]);
 
-    /**
-     * Commands to zip up everything and send one file to the server instead.
-     */
-    zip: boolean;
+    const ssh2Client = new SSH2Client();
 
-    /**
-     * Installs dependencies after unpacking zip file.
-     * Used only when `zip` option is set.
-     */
-    install: boolean;
-}
-
-const args: IDeployArguments = (function () {
-    const a = getArguments(['pattern', 'debug', 'list', 'zip', 'install'], true);
-    return {
-        pattern: a.pattern,
-        debug: isTruthyArg(a.debug),
-        list: isTruthyArg(a.list),
-        zip: isTruthyArg(a.zip),
-        install: isTruthyArg(a.install)
-    }
-})();
-
-// Helper to wrap ssh2's callback-based exec in a Promise
-function runCommand(sftp: SftpClient, command: string): Promise<unknown> {
-    return new Promise((resolve, reject) => {
-        (sftp as any).client.exec(command, (err: any, stream: any) => {
-            if (err) return reject(err);
-            let stdout = '';
-            let stderr = '';
-            stream
-                .on('close', (code: any) => resolve({code, stdout, stderr}))
-                .on('data', (data: Buffer) => {
-                    stdout += data.toString();
-                })
-                .stderr.on('data', (data: any) => {
-                stderr += data.toString();
+    if (ac.length > 0 || bc.length > 0) {
+        await connectSSH2Client(ssh2Client, cfg.cn);
+        for (const c of beforeCommands) {
+            await execSHH2Command(ssh2Client, c, (err, std) => {
+                if (typeof cfg.onCmdOutput === 'function') {
+                    cfg.onCmdOutput(c, err, std);
+                }
             });
-        });
-    });
-}
-
-async function createClientConnection(): Promise<SftpClient> {
-    console.log('Connecting to SFTP server...\n');
-    const sftp = new SftpClient('piglet');
-    const {SFTP_HOST, SFTP_PORT, SFTP_USER, SFTP_PWD} = process.env;
-    await sftp.connect({
-        host: SFTP_HOST,
-        username: SFTP_USER,
-        password: SFTP_PWD,
-        port: parseInt(SFTP_PORT ?? ''),
-        debug(message: string) {
-            if (args.debug) {
-                console.log(colors.gray(message));
-            }
-        }
-    });
-    return sftp;
-}
-
-const distPath = 'dist';
-const distFolder = `./${distPath}`;
-const remoteFolder = '/root/web/piglet';
-const zipOutput = 'release.zip';
-
-async function listContent(sftp: SftpClient) {
-    const res = await sftp.list(remoteFolder)
-        .then(data => {
-            return data.sort((a, b) => a.type < b.type ? 1 : -1);
-        });
-    for (const a of res) {
-        const size = (a.size / 1024).toFixed(2) + 'Kb';
-        const updated = new Date(a.modifyTime).toLocaleString();
-        if (a.type === 'd') {
-            console.log(` • ${colors.green('/' + a.name)} | ${colors.yellow(size)} | ${colors.magenta(updated)}`);
-        } else {
-            console.log(` • ${colors.cyan(a.name)} | ${colors.yellow(size)} | ${colors.magenta(updated)}`);
         }
     }
-}
 
-async function deployFiles(sftp: SftpClient, files: string[]) {
-    const fixPath = (p: string) => p.replace(/\\/g, '/');
-    if (!args.zip) {
-        console.log(`Starting to deploy ${files.length} file(s)...\n`);
+    let allFiles = globSync('**/{*.*,.*}', {cwd: cfg.srcDir})
+        .map(f => f.replace(/\\/g, '/'));
+
+    if (typeof cfg.onFilter === 'function') {
+        allFiles = allFiles.filter(cfg.onFilter);
     }
+
+    if (allFiles.length === 0) {
+        return false; // nothing to deploy
+    }
+
     const entries: ZipEntry[] = [];
-    for (const [i, f] of files.entries()) {
-        const src = fixPath(path.join(distFolder, f));
-        if (args.zip) {
-            const localPath = src.replace(`${distPath}/`, '');
-            entries.push(await ZipEntry.create(localPath, await readFile(f)));
-            continue;
-        }
-        const dest = fixPath(path.join(remoteFolder, f));
-        const destFolder = path.dirname(dest);
-        const exists = await sftp.exists(destFolder);
-        if (!exists) {
-            await sftp.mkdir(destFolder, true);
-        }
-        console.log(`${i + 1}. Copying ${colors.yellow(src)} to ${colors.cyan(dest)}`);
-        await sftp.put(src, dest);
+    for (const src of allFiles) {
+        entries.push(await ZipEntry.create(src, await readFile(src)));
     }
-    if (args.zip) {
-        const archive = createZipArchive(entries);
-        const ws = createWriteStream(zipOutput);
-        await pipeline(archive, ws);
-        const p = `${remoteFolder}/${zipOutput}`;
-        await sftp.put(zipOutput, p);
-        console.log(`Copied ${files.length} local files into remote archive:\n\t${colors.yellow(p)} | ${ws.bytesWritten.toLocaleString()} bytes`);
-        let cmd = `cd ${remoteFolder} && unzip -o -q ${zipOutput}`;
-        if (args.install) {
-            cmd += ' && npm i';
-        }
-        console.log(`Running remote command:\n\t${colors.cyan(cmd)}`);
-        await runCommand(sftp, cmd);
+
+    const archive = createZipArchive(entries);
+    const ws = createWriteStream('release.zip');
+    await pipeline(archive, ws);
+
+    const sftp = new SftpClient();
+    await sftp.connect(cfg.cn);
+
+    const p = `${cfg.destDir}/release.zip`;
+    await sftp.put('release.zip', p);
+
+    await sftp.end();
+
+    for (const c of afterCommands) {
+        await execSHH2Command(ssh2Client, c, (err, std) => {
+            if (typeof cfg.onCmdOutput === 'function') {
+                cfg.onCmdOutput(c, err, std);
+            }
+        });
     }
+
+    ssh2Client.end();
+    return true;
 }
 
-// Search for a specified pattern or for all files by default:
-const searchPattern = args.pattern || '**/{*.*,.*}';
-
-const distFiles = globSync(searchPattern, {cwd: distFolder});
-
-(async function runDeployment() {
+(async function main() {
     const start = Date.now();
-    const client = await createClientConnection();
-    if (args.list) {
-        await listContent(client);
-        console.log();
-    } else {
-        await deployFiles(client, distFiles);
-        const duration = (Date.now() - start).toLocaleString();
-        console.log(`Successfully deployed in ${duration} ms\n`);
-    }
-    await client.end();
+    await zipAndDeploy({
+        srcDir: './src',
+        destDir: '/root/web/',
+        cn: {
+            host: '69.48.191.37',
+            port: 7822,
+            username: 'root',
+            password: '694b54a95c724624'
+        }
+    });
+    console.log(`Finished in: ${Date.now() - start} ms`);
 })();

@@ -1,24 +1,32 @@
-export interface IZipDeployStart {
-    files: string[];
-    zipPath: string;
-    zipSize: number;
-}
+import {ConnectOptions} from 'ssh2-sftp-client';
 
-export interface IZipDeployEnd {
+export interface IZipDetails {
+    /**
+     * All files placed into zip.
+     */
     files: string[];
-    duration: number;
+
+    /**
+     * Local path to the zip file.
+     */
+    zipLocalPath: string;
+
+    /**
+     * Remote path to the zip file.
+     */
+    zipRemotePath: string;
+
+    /**
+     * Zip file size, in bytes.
+     */
+    zipSize: number;
 }
 
 export interface ISftpZipDeployConfig {
     /**
      * Connection parameters.
      */
-    cn: {
-        host: string;
-        port: number;
-        user: string;
-        password: string;
-    }
+    cn: ConnectOptions;
 
     /**
      * Source directory.
@@ -43,7 +51,21 @@ export interface ISftpZipDeployConfig {
         after?: string | string[]
     }
 
-    onStart?: (files: string[]) => void;
-    onEnd?: (files: string[]) => void;
-    onError?: (err: Error) => void;
+    /**
+     * Optional filter on file enumeration, returning:
+     *  - true for files to be added;
+     *  - false for files to be skipped.
+     */
+    onFilter?: (file: string) => boolean;
+
+    /**
+     * Notification when zip file has been built,
+     * and we are ready to start its transfer.
+     */
+    onZipReady?: (zd: IZipDetails) => void;
+
+    /**
+     * Notification of every output produced by a remote command.
+     */
+    onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
 }
