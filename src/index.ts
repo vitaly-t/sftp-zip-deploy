@@ -6,7 +6,7 @@ import {globSync} from 'glob';
 import path from 'node:path';
 
 export {IZipDetails, ISftpZipDeployConfig} from './config.js';
-export {ConnectOptions} from 'ssh2-sftp-client';
+export {default as ConnectOptions} from 'ssh2-sftp-client';
 
 /**
  * From the configuration object, it implements the following steps:
