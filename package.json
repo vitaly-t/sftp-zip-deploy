@@ -1,17 +1,21 @@
 {
   "name": "sftp-zip-deploy",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
     "start": "tsc && node ./src/index.js"
   },
+  "homepage": "https://github.com/vitaly-t/sftp-zip-deploy",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/vitaly-t/sftp-zip-deploy.git"
   },
-  "private": true,
+  "author": {
+    "name": "Vitaly Tomilov"
+  },
   "engines": {
     "node": ">=26"
   },

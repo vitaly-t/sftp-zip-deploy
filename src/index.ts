@@ -70,17 +70,3 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
     return true;
 }
 
-(async function main() {
-    const start = Date.now();
-    await zipAndDeploy({
-        srcDir: './src',
-        destDir: '/root/web/',
-        cn: {
-            host: '69.48.191.37',
-            port: 7822,
-            username: 'root',
-            password: '694b54a95c724624'
-        }
-    });
-    console.log(`Finished in: ${Date.now() - start} ms`);
-})();
