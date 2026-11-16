@@ -1,7 +1,7 @@
-import {ISftpZipDeployConfig} from './config';
+import {ISftpZipDeployConfig} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
-import {connectSSH2Client, execSHH2Command, zipFiles} from './utils';
+import {connectSSH2Client, execSHH2Command, zipFiles} from './utils.js';
 import {globSync} from 'glob';
 
 export {default as ConnectOptions} from 'ssh2-sftp-client';
