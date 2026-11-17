@@ -2,7 +2,7 @@
 
 [![Node Version](https://img.shields.io/badge/nodejs-%2026-green.svg?logo=node.js&style=flat)](https://nodejs.org)
 
-Simple and efficient way to auto-deploy your project to a server:
+Fast and efficient way to auto-deploy your project to a server:
 
 - It zips your distribution folder and sends the archive to your server via SFTP
 - It optionally runs remote commands, before / after zip deployment, via SSH2
@@ -62,9 +62,9 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 * [onFilter] - to let you filter files inside distribution folder
 * [onCmdOutput] - to get all output from remote commands
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L67
-[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L61
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L81
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L69
+[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L63
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L86
 
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L6
 
