@@ -27,6 +27,7 @@ export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: 
                     resolve();
                 }
             });
+            stream.once('error', (err: any) => reject(err));
             stream.on('data', (chunk: Buffer) => output(undefined, chunk));
             stream.stderr.on('data', (chunk: Buffer) => output(chunk, undefined));
         });
