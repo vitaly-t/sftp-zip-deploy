@@ -21,10 +21,16 @@ export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: 
                 return reject(err);
             }
             stream.once('close', (code: number) => {
-                if (code) {
-                    reject(new Error(`Command "${cmd}" exited with code ${code}`));
-                } else {
-                    resolve();
+                switch (code) {
+                    case 0:
+                        resolve();
+                        break;
+                    case null:
+                    case undefined:
+                        reject(new Error(`Command "${cmd}" terminated abnormally`));
+                        break;
+                    default:
+                        reject(new Error(`Command "${cmd}" exited with code ${code}`));
                 }
             });
             stream.once('error', (err: any) => reject(err));
