@@ -22,14 +22,14 @@ npm i sftp-zip-deploy --save-dev
 
 In the example below, we deploy a NodeJS project into `/root/web` on our remote server.
 
-Once the zip file is deployed, we run commands to set that folder as active, then unpack
+Once the zip file is deployed, we use `cmd.after` commands to set that folder as active, then unpack
 the archive and install the project's dependencies.
 
 ```ts
 import {zipAndDeploy} from 'sftp-zip-deploy';
 
 await zipAndDeploy({
-    srcDir: './dist', // folder with content to deploy
+    srcDir: './dist', // local folder with content to deploy
     destDir: '/root/web/', // remote folder to copy our zip file
     zipFile: {
         name: 'release.zip', // set custom name for the archive
