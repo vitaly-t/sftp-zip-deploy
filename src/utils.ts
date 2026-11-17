@@ -1,4 +1,5 @@
-import {Client as SSH2Client, ConnectConfig} from 'ssh2';
+import {Client as SSH2Client} from 'ssh2';
+import type {ConnectConfig} from 'ssh2';
 import {createZipArchive, ZipEntry} from 'node:zlib';
 import {readFile} from 'node:fs/promises';
 import {createWriteStream} from 'node:fs';

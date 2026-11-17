@@ -6,7 +6,9 @@
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "build": "tsc -p src"
+    "build": "tsc -p src",
+    "test": "node --test test/utils.test.ts",
+    "test:coverage": "node --experimental-test-coverage --test test/utils.test.ts"
   },
   "files": [
     "dist"
