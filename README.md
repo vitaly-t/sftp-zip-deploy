@@ -15,7 +15,7 @@ This library relies on Node-native support for SSH2 and ZIP, and therefore requi
 ## Install
 
 ```
-npm i sftp-zip-deploy
+npm i sftp-zip-deploy --save-dev
 ```
 
 ## Usage
@@ -53,9 +53,8 @@ So avoid running commands that may trigger an input prompt.
 
 ## API
 
-The library shares connection options for SFTP / SSH2, and reuses the standard `ConnectOptions` / `ConnectConfig`
-types from the underlying modules. If you want to use that type explicitly, you will need to add `@types/ssh2-sftp-client` 
-as a DEV dependency.
+The library shares connection options for SFTP / SSH2, and reuses `ConnectOptions` from `ssh2-sftp-client` module.
+To use that type explicitly, you will need to add `@types/ssh2-sftp-client` as a DEV dependency.
 
 The main interface [ISftpZipDeployConfig] has a number of options, including events for providing progress details:
 
@@ -68,3 +67,11 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 [onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L81
 
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L6
+
+## Tips
+
+Because this library uses the latest ZIP functionality from Node, you may get this warning in the console:
+
+> (node:16820) ExperimentalWarning: The zlib ZIP archive API is an experimental feature and might change at any time
+
+You can suppress it by adding `--no-warnings=ExperimentalWarning=9820` to your node script command.
