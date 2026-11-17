@@ -2,7 +2,7 @@ import {ISftpZipDeployConfig} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
 import {connectSSH2Client, execSSH2Command, fixWindowsPath, zipFiles} from './utils.js';
-import {globSync} from 'glob';
+import {glob} from 'glob';
 import path from 'node:path';
 
 export {IZipDetails, ISftpZipDeployConfig} from './config.js';
@@ -31,8 +31,8 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
         await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
     }
 
-    let files = globSync('**/{*.*,*}', {cwd: cfg.srcDir, nodir: true, dot: true})
-        .map(f => fixWindowsPath(f));
+    let files = await glob('**/{*.*,*}', {cwd: cfg.srcDir, nodir: true, dot: true})
+        .then(a => a.map(f => fixWindowsPath(f)));
 
     if (typeof cfg.onFilter === 'function') {
         files = files.filter(cfg.onFilter);
