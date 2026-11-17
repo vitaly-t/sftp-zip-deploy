@@ -77,6 +77,9 @@ export interface ISftpZipDeployConfig {
      * @param err
      * Set when the output was sent into StdErr, i.e. an error is reported.
      *
+     * In most cases however, when there is an issue, the command returns
+     * an error code, in which case an error is thrown instead.
+     *
      * @param std
      * Set when normal/standard output is generated (not an error).
      */

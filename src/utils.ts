@@ -19,7 +19,13 @@ export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: 
             if (err) {
                 return reject(err);
             }
-            stream.once('close', () => resolve());
+            stream.once('close', (code: number) => {
+                if (code) {
+                    reject(new Error(`Command "${cmd}" exited with code ${code}`));
+                } else {
+                    resolve();
+                }
+            });
             stream.on('data', (chunk: Buffer) => output(undefined, chunk));
             stream.stderr.on('data', (chunk: Buffer) => output(chunk, undefined));
         });
