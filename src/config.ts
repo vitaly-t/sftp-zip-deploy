@@ -27,8 +27,7 @@ export interface ISftpZipDeployConfig {
      */
     zipFile?: {
         /**
-         * Local directory where zip file is to be created.
-         * Default is './'
+         * Local directory where zip file is to be created. Default is './'
          */
         dir?: string,
         /**

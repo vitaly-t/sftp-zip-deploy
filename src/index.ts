@@ -50,7 +50,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
             const zipLocalPath = fixWindowsPath(path.join(zipFileDir, zipFileName));
             const zipRemotePath = fixWindowsPath(path.join(cfg.destDir, zipFileName));
 
-            const zipSize = await zipFiles(cfg.srcDir, files, zipLocalPath);
+            const zipSize = await zipFiles(cfg.srcDir, files, {dir: zipFileDir, name: zipFileName});
             cfg.onZipReady?.({files, zipLocalPath, zipRemotePath, zipSize});
 
             await sftp.connect(cfg.cn);
