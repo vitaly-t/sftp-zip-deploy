@@ -29,7 +29,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
         await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
     }
 
-    let files = globSync('**/{*.*,.*}', {cwd: cfg.srcDir, nodir: true})
+    let files = globSync('**/{*.*,*,.}', {cwd: cfg.srcDir, nodir: true})
         .map(f => fixWindowsPath(f));
 
     if (typeof cfg.onFilter === 'function') {
