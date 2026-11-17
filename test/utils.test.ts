@@ -18,10 +18,11 @@ test('zipFiles creates an archive containing the requested files and reports its
 
     await writeFile(path.join(dir, 'hello.txt'), 'Hello, ZIP!');
     await writeFile(path.join(dir, 'nested.json'), '{"ok":true}');
-    const archivePath = path.join(dir, 'files.zip');
+    const archiveDir = path.join(dir, 'output', 'archives');
+    const archiveName = 'files.zip';
 
-    const reportedSize = await zipFiles(dir, ['hello.txt', 'nested.json'], archivePath);
-    const archive = await readFile(archivePath);
+    const reportedSize = await zipFiles(dir, ['hello.txt', 'nested.json'], {dir: archiveDir, name: archiveName});
+    const archive = await readFile(path.join(archiveDir, archiveName));
 
     assert.equal(reportedSize, archive.byteLength);
     assert.ok(reportedSize > 0);
@@ -34,7 +35,7 @@ test('zipFiles rejects when a requested input file does not exist', async t => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-'));
     t.after(() => rm(dir, {recursive: true, force: true}));
 
-    await assert.rejects(zipFiles(dir, ['missing.txt'], path.join(dir, 'files.zip')), {
+    await assert.rejects(zipFiles(dir, ['missing.txt'], {dir, name: 'files.zip'}), {
         code: 'ENOENT'
     });
 });
