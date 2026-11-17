@@ -38,7 +38,7 @@ export interface ISftpZipDeployConfig {
     };
 
     /**
-     * Optional commands to execute before / after deploying zip file.
+     * Optional commands to execute before / after deploying the zip file.
      */
     cmd?: {
         /**
@@ -47,6 +47,8 @@ export interface ISftpZipDeployConfig {
         before?: string,
         /**
          * Command(s) to be executed after zip has been deployed.
+         *
+         * It is skipped, if no zip was deployed (no files found).
          */
         after?: string
     }

@@ -15,7 +15,7 @@ export {default as ConnectOptions} from 'ssh2-sftp-client';
  * 2. Enumerates all files inside `srcDir`, plus filters them via `onFilter` (if used)
  * 3. Produces zip file with all the resulting files and triggers `onZipReady` (if used)
  * 4. Uploads zip file to the remote machine
- * 5. Executes `cmd.after` commands, if such were specified
+ * 5. Executes `cmd.after` commands, if such were specified, and zip was actually deployed.
  * 6. Resolves with `true`, if at least one file was found and zip was created,
  *    or `false` otherwise (i.e. it does not create an empty zip)
  */
@@ -52,9 +52,10 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
         await sftp.connect(cfg.cn);
         await sftp.put(zipLocalPath, zipRemotePath);
         await sftp.end();
-    }
-    if (after) {
-        await execSSH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+
+        if (after) {
+            await execSSH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+        }
     }
     ssh2Client.end();
     return files.length > 0;
