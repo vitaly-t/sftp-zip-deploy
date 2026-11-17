@@ -42,7 +42,7 @@ export async function zipFiles(dir: string, files: string[], zipPath: string): P
 }
 
 /**
- * Fixes Windows path-s, by replacing every '\' with '/'
+ * Fixes Windows paths, by replacing every '\' with '/'
  */
 export function fixWindowsPath(path: string): string {
     return path.replace(/\\/g, '/');

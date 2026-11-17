@@ -10,7 +10,7 @@ Simple and efficient way to auto-deploy your project to a server:
 
 **IMPORTANT:**
 
-This library relies on Node-native support for SSH2 and ZIP, and therefore requires Node v26 as minimum.
+This library relies on Node-native support for SSH2 and ZIP, and therefore requires Node v26 or newer.
 
 ## Install
 
@@ -22,8 +22,8 @@ npm i sftp-zip-deploy --save-dev
 
 In the example below, we deploy a NodeJS project into `/root/web` on our remote server.
 
-Once zip file is deployed, we run commands to set that folder as active, then unpack
-the archive and install project's dependencies.
+Once the zip file is deployed, we run commands to set that folder as active, then unpack
+the archive and install the project's dependencies.
 
 ```ts
 import {zipAndDeploy} from 'sftp-zip-deploy';
@@ -72,6 +72,6 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 
 Because this library uses the latest ZIP functionality from Node, you may get this warning in the console:
 
-> (node:16820) ExperimentalWarning: The zlib ZIP archive API is an experimental feature and might change at any time
+> ExperimentalWarning: The zlib ZIP archive API is an experimental feature and might change at any time
 
 You can suppress it by adding `--no-warnings=ExperimentalWarning=9820` to your node script command.
