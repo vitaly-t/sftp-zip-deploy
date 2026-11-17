@@ -6,7 +6,7 @@ import {glob} from 'glob';
 import path from 'node:path';
 
 export {IZipDetails, ISftpZipDeployConfig} from './config.js';
-export {default as ConnectOptions} from 'ssh2-sftp-client';
+export type {ConnectOptions} from 'ssh2-sftp-client';
 
 /**
  * From the configuration object, it implements the following steps:
@@ -22,16 +22,16 @@ export {default as ConnectOptions} from 'ssh2-sftp-client';
 export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> {
 
     const sftp = new SftpClient();
-    const ssh2Client = new SSH2Client();
+    const ssh2 = new SSH2Client();
     const {before = '', after = ''} = cfg.cmd ?? {};
     let hasFiles = false;
 
     try {
         if (before || after) {
-            await connectSSH2Client(ssh2Client, cfg.cn);
+            await connectSSH2Client(ssh2, cfg.cn);
         }
         if (before) {
-            await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
+            await execSSH2Command(ssh2, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
         }
 
         let files = await glob('**/{*.*,*}', {cwd: cfg.srcDir, nodir: true, dot: true})
@@ -57,12 +57,12 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
             await sftp.put(zipLocalPath, zipRemotePath);
 
             if (after) {
-                await execSSH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+                await execSSH2Command(ssh2, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
             }
         }
     } finally {
         await sftp.end();
-        ssh2Client.end();
+        ssh2.end();
     }
 
     return hasFiles;
