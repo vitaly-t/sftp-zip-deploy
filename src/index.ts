@@ -21,42 +21,49 @@ export {default as ConnectOptions} from 'ssh2-sftp-client';
  */
 export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> {
 
+    const sftp = new SftpClient();
     const ssh2Client = new SSH2Client();
     const {before = '', after = ''} = cfg.cmd ?? {};
+    let hasFiles = false;
 
-    if (before || after) {
-        await connectSSH2Client(ssh2Client, cfg.cn);
-    }
-    if (before) {
-        await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
-    }
-
-    let files = await glob('**/{*.*,*}', {cwd: cfg.srcDir, nodir: true, dot: true})
-        .then(a => a.map(f => fixWindowsPath(f)));
-
-    if (typeof cfg.onFilter === 'function') {
-        files = files.filter(cfg.onFilter);
-    }
-
-    if (files.length > 0) {
-        const zipFileDir = cfg.zipFile?.dir ?? './';
-        const zipFileName = cfg.zipFile?.name ?? 'release.zip';
-
-        const zipLocalPath = fixWindowsPath(path.join(zipFileDir, zipFileName));
-        const zipRemotePath = fixWindowsPath(path.join(cfg.destDir, zipFileName));
-
-        const zipSize = await zipFiles(cfg.srcDir, files, zipLocalPath);
-        cfg.onZipReady?.({files, zipLocalPath, zipRemotePath, zipSize});
-
-        const sftp = new SftpClient();
-        await sftp.connect(cfg.cn);
-        await sftp.put(zipLocalPath, zipRemotePath);
-        await sftp.end();
-
-        if (after) {
-            await execSSH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+    try {
+        if (before || after) {
+            await connectSSH2Client(ssh2Client, cfg.cn);
         }
+        if (before) {
+            await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
+        }
+
+        let files = await glob('**/{*.*,*}', {cwd: cfg.srcDir, nodir: true, dot: true})
+            .then(a => a.map(f => fixWindowsPath(f)));
+
+        if (typeof cfg.onFilter === 'function') {
+            files = files.filter(cfg.onFilter);
+        }
+
+        hasFiles = files.length > 0;
+
+        if (hasFiles) {
+            const zipFileDir = cfg.zipFile?.dir ?? './';
+            const zipFileName = cfg.zipFile?.name ?? 'release.zip';
+
+            const zipLocalPath = fixWindowsPath(path.join(zipFileDir, zipFileName));
+            const zipRemotePath = fixWindowsPath(path.join(cfg.destDir, zipFileName));
+
+            const zipSize = await zipFiles(cfg.srcDir, files, zipLocalPath);
+            cfg.onZipReady?.({files, zipLocalPath, zipRemotePath, zipSize});
+
+            await sftp.connect(cfg.cn);
+            await sftp.put(zipLocalPath, zipRemotePath);
+
+            if (after) {
+                await execSSH2Command(ssh2Client, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+            }
+        }
+    } finally {
+        await sftp.end();
+        ssh2Client.end();
     }
-    ssh2Client.end();
-    return files.length > 0;
+
+    return hasFiles;
 }
