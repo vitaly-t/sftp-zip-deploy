@@ -26,6 +26,8 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> 
 
     if (before || after) {
         await connectSSH2Client(ssh2Client, cfg.cn);
+    }
+    if (before) {
         await execSSH2Command(ssh2Client, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
     }
 
