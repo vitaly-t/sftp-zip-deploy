@@ -12,11 +12,11 @@ export type {ConnectOptions} from 'ssh2-sftp-client';
  * From the configuration object, it implements the following steps:
  *
  * 1. Executes `cmd.before` commands, if such were specified
- * 2. Enumerates all files inside `srcDir`, plus filters them via `onFilter` (if used)
- * 3. Produces zip file with all the resulting files and triggers `onZipReady` (if used)
+ * 2. Enumerates all files inside `srcDir`, plus filters them via `onFilter` (if specified)
+ * 3. Produces zip file with all the resulting files and triggers `onZipReady` (if specified)
  * 4. Uploads zip file to the remote machine
- * 5. Executes `cmd.after` commands, if such were specified, and zip was actually deployed.
- * 6. Resolves with `true`, if at least one file was found and zip was created,
+ * 5. Executes `cmd.after` commands, if such were specified (and zip was actually deployed).
+ * 6. Resolves with `true`, if at least one file was found and zip was created + deployed,
  *    or `false` otherwise (i.e. it does not create an empty zip)
  */
 export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<boolean> {

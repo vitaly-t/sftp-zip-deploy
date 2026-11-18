@@ -53,8 +53,7 @@ export interface ISftpZipDeployConfig {
     }
 
     /**
-     * Optional filter on file enumeration (found in `srcDir`),
-     * returning:
+     * Optional filter on file enumeration (found in `srcDir`), returning:
      *
      *  - true for files to be added;
      *  - false for files to be skipped.
@@ -71,13 +70,13 @@ export interface ISftpZipDeployConfig {
      * Notification of every output produced by a remote command.
      *
      * @param cmd
-     * Command that produced an output.
+     * Command that produced the output.
      *
      * @param err
      * Set when the output was sent into StdErr, i.e. an error is reported.
      *
-     * In most cases however, when there is an issue, the command returns
-     * an error code, in which case an error is thrown instead.
+     * In most cases, when there is an issue, the command also returns
+     * an error code, which makes the API throw an error.
      *
      * @param std
      * Set when normal/standard output is generated (not an error).
@@ -100,7 +99,7 @@ export interface IZipDetails {
     zipLocalPath: string;
 
     /**
-     * Remote path to the zip file.
+     * Remote path to the zip file (projected).
      */
     zipRemotePath: string;
 

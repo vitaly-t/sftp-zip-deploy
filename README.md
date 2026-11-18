@@ -6,12 +6,12 @@
 Fast and efficient way to auto-deploy your project to a server:
 
 - It zips your distribution folder and sends the archive to your server via SFTP
-- It optionally runs remote commands, before / after zip deployment, via SSH2
+- It supports remote commands for before / after zip deployment, via SSH2
 - It provides detailed data about what is going on all the way
 
 **IMPORTANT:**
 
-This library relies on Node-native support for SSH2 and ZIP, and therefore requires Node v26 or newer.
+This library relies on NodeJS-native support for SSH2 and ZIP, and therefore requires Node v26 or newer.
 
 ## Install
 
@@ -60,9 +60,9 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 * [onFilter] - to let you filter files inside distribution folder
 * [onCmdOutput] - to get all output from remote commands
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L68
-[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L62
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L85
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L67
+[onFilter]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L61
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L84
 
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L6
 
