@@ -32,18 +32,22 @@ import {zipAndDeploy} from 'sftp-zip-deploy';
 await zipAndDeploy({
     srcDir: './dist', // local folder with content to deploy
     destDir: '/root/web/', // remote folder to copy our zip file
-    zipFile: {
-        name: 'release.zip', // set custom name for the archive
-        dir: './' // we can change where zip is created
-    },
     cn: {
         host: '1.2.3.4',
         port: 123,
         username: 'root',
         password: '#########'
     },
+    // Settings below are optional
+    zipFile: {
+        name: 'release.zip', // set custom name for the archive
+        dir: './' // we can change where zip is created
+    },
     cmd: {
+        // remote command to execute after zip deployment:
         after: 'cd /root/web && unzip -o release.zip && npm i'
+        
+        // also supports "before" command 
     }
 });
 ```
