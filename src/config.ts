@@ -5,7 +5,7 @@ import {ConnectOptions} from 'ssh2-sftp-client';
  */
 export interface ISftpZipDeployConfig {
     /**
-     * Connection parameters.
+     * Connection parameters for SFTP + SSH2.
      */
     cn: ConnectOptions;
 
@@ -20,21 +20,11 @@ export interface ISftpZipDeployConfig {
     destDir: string;
 
     /**
-     * Optional name + location of the local zip file.
+     * Optional local path + name for the local zip file.
      *
-     * It defaults to {dir: './', name: 'release.zip'},
-     * to create it in the root of your project.
+     * It defaults to './release.zip'
      */
-    zipFile?: {
-        /**
-         * Local directory where zip file is to be created. Default is './'
-         */
-        dir?: string,
-        /**
-         * Name for the local zip file. Default is 'release.zip'
-         */
-        name?: string
-    };
+    zipFile?: string;
 
     /**
      * Optional commands to execute before / after deploying the zip file.
@@ -46,25 +36,32 @@ export interface ISftpZipDeployConfig {
         before?: string,
         /**
          * Command(s) to be executed after zip has been deployed.
-         *
-         * It is skipped, if no zip was deployed (no files found).
          */
         after?: string
     }
 
     /**
-     * Optional filter on file enumeration (found in `srcDir`), returning:
+     * Notification when zip file has been built, and we are ready
+     * to start its transfer.
      *
-     *  - true for files to be added;
-     *  - false for files to be skipped.
+     * @param localPath
+     * Path + name of the local zip file created.
+     *
+     * @param size
+     * Size of the local zip file.
      */
-    onFilter?: (file: string) => boolean;
+    onZipReady?: (localPath: string, size: number) => void;
 
     /**
-     * Notification when zip file has been built,
-     * and we are ready to start its transfer.
+     * Notification when zip file has been copied over via SFTP.
+     *
+     * @param remotePath
+     * Path + name of the remote zip file copied.
+     *
+     * @param size
+     * Size of the zip file transferred.
      */
-    onZipReady?: (zd: IZipDetails) => void;
+    onZipDeployed?: (remotePath: string, size: number) => void;
 
     /**
      * Notification of every output produced by a remote command.
@@ -82,29 +79,4 @@ export interface ISftpZipDeployConfig {
      * Set when normal/standard output is generated (not an error).
      */
     onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
-}
-
-/**
- * For use with onZipReady event.
- */
-export interface IZipDetails {
-    /**
-     * All files placed into zip.
-     */
-    files: string[];
-
-    /**
-     * Local path to the zip file.
-     */
-    zipLocalPath: string;
-
-    /**
-     * Remote path to the zip file (projected).
-     */
-    zipRemotePath: string;
-
-    /**
-     * Zip file size, in bytes.
-     */
-    zipSize: number;
 }
