@@ -1,4 +1,5 @@
 import {ConnectOptions} from 'ssh2-sftp-client';
+import {ZipArchiveOptions} from 'zip-a-folder';
 
 /**
  * Configuration structure, to be passed into `zipAndDeploy`.
@@ -25,6 +26,12 @@ export interface ISftpZipDeployConfig {
      * It defaults to './release.zip'
      */
     zipFile?: string;
+
+    /**
+     * Options to be passed into `zip-a-folder` library
+     * when creating a zip archive.
+     */
+    zipOptions?: ZipArchiveOptions;
 
     /**
      * Optional commands to execute before / after deploying the zip file.

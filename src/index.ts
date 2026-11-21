@@ -30,7 +30,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         }
         const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
-        await zip(cfg.srcDir, zipPath);
+        await zip(cfg.srcDir, zipPath, cfg.zipOptions);
         const {size} = await stat(zipPath);
         cfg.onZipReady?.(zipPath, size);
         const remoteDir = fixWindowsPath(cfg.destDir);
