@@ -73,7 +73,13 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
     replace(SftpClient.prototype, 'put', sftp.put.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
-    replace(SSH2Client.prototype, 'connect', ssh.connect.bind(ssh));
+    // The production code listens for events on its SSH2Client instance, so
+    // emit `ready` on that instance rather than on the separate MockSSH object.
+    replace(SSH2Client.prototype, 'connect', function(this: SSH2Client) {
+        ssh.connectCalls++;
+        setImmediate(() => this.emit('ready'));
+        return this;
+    });
     replace(SSH2Client.prototype, 'exec', ssh.exec.bind(ssh));
     replace(SSH2Client.prototype, 'end', ssh.end.bind(ssh));
 
