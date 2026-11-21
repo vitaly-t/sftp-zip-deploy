@@ -6,14 +6,16 @@ import {mkdtemp, mkdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {Client as SSH2Client} from 'ssh2';
 import SftpClient from 'ssh2-sftp-client';
 import {EventEmitter} from 'node:events';
-import {zipAndDeploy} from '../src/index.js';
+import {zipAndDeploy} from '../dist/index.js';
 
-async function fixture(): Promise<{dir: string; zip: string}> {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-'));
-    await mkdir(path.join(dir, 'nested'));
+async function fixture(): Promise<{root: string; dir: string; zip: string}> {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-'));
+    const dir = path.join(root, 'source');
+    const zip = path.join(root, 'release.zip');
+    await mkdir(path.join(dir, 'nested'), {recursive: true});
     await writeFile(path.join(dir, 'hello.txt'), 'Hello, ZIP!');
     await writeFile(path.join(dir, 'nested', 'data.json'), '{"ok":true}');
-    return {dir, zip: path.join(dir, 'release.zip')};
+    return {root, dir, zip};
 }
 
 class MockSftp extends EventEmitter {
@@ -45,9 +47,9 @@ class MockSSH extends EventEmitter {
         return this;
     }
 
-    exec(command: string, callback: (err: Error | undefined, stream: EventEmitter) => void): void {
+    exec(command: string, callback: (err: Error | undefined, stream: EventEmitter & {stderr: EventEmitter}) => void): void {
         this.commands.push(command);
-        const stream = new EventEmitter();
+        const stream = Object.assign(new EventEmitter(), {stderr: new EventEmitter()});
         callback(undefined, stream);
         queueMicrotask(() => {
             stream.emit('data', Buffer.from(command));
@@ -61,25 +63,38 @@ class MockSSH extends EventEmitter {
     }
 }
 
-function mockConstructors(sftp: MockSftp, ssh: MockSSH): () => void {
-    const oldSftp = SftpClient;
-    const oldSSH = SSH2Client;
-    Object.setPrototypeOf(SftpClient, function(): MockSftp { return sftp; });
-    Object.setPrototypeOf(SSH2Client, function(): MockSSH { return ssh; });
+function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
+    const overrides: Array<[object, string, PropertyDescriptor | undefined]> = [];
+    const replace = (prototype: object, key: string, value: (...args: any[]) => any) => {
+        overrides.push([prototype, key, Object.getOwnPropertyDescriptor(prototype, key)]);
+        Object.defineProperty(prototype, key, {configurable: true, value});
+    };
+
+    replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
+    replace(SftpClient.prototype, 'put', sftp.put.bind(sftp));
+    replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
+    replace(SSH2Client.prototype, 'connect', ssh.connect.bind(ssh));
+    replace(SSH2Client.prototype, 'exec', ssh.exec.bind(ssh));
+    replace(SSH2Client.prototype, 'end', ssh.end.bind(ssh));
+
     return () => {
-        Object.setPrototypeOf(SftpClient, oldSftp);
-        Object.setPrototypeOf(SSH2Client, oldSSH);
+        for (const [prototype, key, descriptor] of overrides.reverse()) {
+            if (descriptor) {
+                Object.defineProperty(prototype, key, descriptor);
+            } else {
+                delete (prototype as Record<string, unknown>)[key];
+            }
+        }
     };
 }
 
 test('zipAndDeploy creates an archive and reports ready/deployed callbacks', async (t) => {
-    const {dir, zip} = await fixture();
-    t.after(() => rm(dir, {recursive: true, force: true}));
+    const {root, dir, zip} = await fixture();
+    t.after(() => rm(root, {recursive: true, force: true}));
 
     const sftp = new MockSftp();
     const ssh = new MockSSH();
-    const restore = mockConstructors(sftp, ssh);
-    t.after(restore);
+    t.after(mockClientMethods(sftp, ssh));
 
     let ready: [string, number] | undefined;
     let deployed: [string, number] | undefined;
@@ -97,25 +112,21 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
     const archiveSize = (await stat(zip)).size;
 
     assert.equal(archive.subarray(0, 4).toString('hex'), '504b0304');
-    assert.equal(ready?.[0], zip);
-    assert.equal(ready?.[1], archiveSize);
-    assert.equal(deployed?.[0], '/srv/app/dist/release.zip');
-    assert.equal(deployed?.[1], archiveSize);
+    assert.deepEqual(ready, [zip, archiveSize]);
+    assert.deepEqual(deployed, ['/srv/app/dist/release.zip', archiveSize]);
     assert.equal(sftp.connectCalls, 1);
     assert.deepEqual(sftp.putCalls, [[zip, '/srv/app/dist/release.zip']]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
-    assert.ok(archive.byteLength > 0);
 });
 
 test('zipAndDeploy executes before/after commands and forwards command output', async (t) => {
-    const {dir, zip} = await fixture();
-    t.after(() => rm(dir, {recursive: true, force: true}));
+    const {root, dir, zip} = await fixture();
+    t.after(() => rm(root, {recursive: true, force: true}));
 
     const sftp = new MockSftp();
     const ssh = new MockSSH();
-    const restore = mockConstructors(sftp, ssh);
-    t.after(restore);
+    t.after(mockClientMethods(sftp, ssh));
 
     const output: string[] = [];
     await zipAndDeploy({
@@ -134,22 +145,21 @@ test('zipAndDeploy executes before/after commands and forwards command output', 
     assert.equal(ssh.endCalls, 1);
 });
 
-test('zipAndDeploy uses release.zip and always closes both clients', async (t) => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-default-'));
+test('zipAndDeploy uses release.zip and closes both clients', async (t) => {
+    const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-default-'));
+    const dir = path.join(root, 'source');
     const originalCwd = process.cwd();
+    await mkdir(dir);
+    await writeFile(path.join(dir, 'hello.txt'), 'hello');
+    process.chdir(root);
     t.after(async () => {
         process.chdir(originalCwd);
-        await rm(dir, {recursive: true, force: true});
-        await rm(path.join(originalCwd, 'release.zip'), {force: true});
+        await rm(root, {recursive: true, force: true});
     });
-
-    await writeFile(path.join(dir, 'hello.txt'), 'hello');
-    process.chdir(dir);
 
     const sftp = new MockSftp();
     const ssh = new MockSSH();
-    const restore = mockConstructors(sftp, ssh);
-    t.after(restore);
+    t.after(mockClientMethods(sftp, ssh));
 
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
@@ -157,8 +167,7 @@ test('zipAndDeploy uses release.zip and always closes both clients', async (t) =
         destDir: '/deploy'
     });
 
-    assert.equal(sftp.putCalls[0][0], './release.zip');
-    assert.equal(sftp.putCalls[0][1], '/deploy/release.zip');
+    assert.deepEqual(sftp.putCalls, [['./release.zip', '/deploy/release.zip']]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
