@@ -5,7 +5,7 @@ import {ConnectOptions} from 'ssh2-sftp-client';
  */
 export interface ISftpZipDeployConfig {
     /**
-     * Connection parameters.
+     * Connection parameters for SFTP + SSH2.
      */
     cn: ConnectOptions;
 
@@ -20,7 +20,7 @@ export interface ISftpZipDeployConfig {
     destDir: string;
 
     /**
-     * Optional path to the local zip file.
+     * Optional local path + name for the local zip file.
      *
      * It defaults to './release.zip'
      */
@@ -36,23 +36,32 @@ export interface ISftpZipDeployConfig {
         before?: string,
         /**
          * Command(s) to be executed after zip has been deployed.
-         *
-         * It is skipped, if no zip was deployed (no files found).
          */
         after?: string
     }
 
     /**
      * Notification when zip file has been built, and we are ready
-     * to start its transfer, passing local zip file + size.
+     * to start its transfer.
+     *
+     * @param localPath
+     * Path + name of the local zip file created.
+     *
+     * @param size
+     * Size of the local zip file.
      */
-    onZipReady?: (localZip: string, size: number) => void;
+    onZipReady?: (localPath: string, size: number) => void;
 
     /**
-     * Notification when zip file has been copied over via SFTP,
-     * passing remote zip file path + size.
+     * Notification when zip file has been copied over via SFTP.
+     *
+     * @param remotePath
+     * Path + name of the remote zip file copied.
+     *
+     * @param size
+     * Size of the zip file transferred.
      */
-    onZipDeployed?: (remoteZip: string, size: number) => void;
+    onZipDeployed?: (remotePath: string, size: number) => void;
 
     /**
      * Notification of every output produced by a remote command.
