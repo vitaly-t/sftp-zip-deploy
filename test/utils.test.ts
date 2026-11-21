@@ -6,7 +6,7 @@ import {mkdtemp, mkdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {Client as SSH2Client} from 'ssh2';
 import SftpClient from 'ssh2-sftp-client';
 import {EventEmitter} from 'node:events';
-import {zipAndDeploy} from '../dist/index.js';
+import {fixWindowsPath, zipAndDeploy} from '../dist/index.js';
 
 async function fixture(): Promise<{ root: string; dir: string; zip: string }> {
     const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-'));
@@ -88,6 +88,18 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
         }
     };
 }
+
+test('fixWindowsPath replaces Windows path separators', () => {
+    assert.equal(fixWindowsPath('C:\\deploy\\app\\release.zip'), 'C:/deploy/app/release.zip');
+    assert.equal(fixWindowsPath('/srv/app\\dist'), '/srv/app/dist');
+    assert.equal(fixWindowsPath('\\\\server\\share\\folder'), '//server/share/folder');
+});
+
+test('fixWindowsPath preserves already-normalized paths', () => {
+    assert.equal(fixWindowsPath('/srv/app/dist'), '/srv/app/dist');
+    assert.equal(fixWindowsPath('./release.zip'), './release.zip');
+    assert.equal(fixWindowsPath(''), '');
+});
 
 test('zipAndDeploy creates an archive and reports ready/deployed callbacks', async (t) => {
     const {root, dir, zip} = await fixture();
