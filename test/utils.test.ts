@@ -43,7 +43,7 @@ class MockSSH extends EventEmitter {
 
     connect(): this {
         this.connectCalls++;
-        queueMicrotask(() => this.emit('ready'));
+        setImmediate(() => this.emit('ready'));
         return this;
     }
 
@@ -51,7 +51,7 @@ class MockSSH extends EventEmitter {
         this.commands.push(command);
         const stream = Object.assign(new EventEmitter(), {stderr: new EventEmitter()});
         callback(undefined, stream);
-        queueMicrotask(() => {
+        setImmediate(() => {
             stream.emit('data', Buffer.from(command));
             stream.emit('close', 0);
         });
