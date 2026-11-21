@@ -43,7 +43,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
             await execSSH2Command(ssh2, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
         }
     } finally {
-        await sftp.end();
         ssh2.end();
+        await sftp.end();
     }
 }
