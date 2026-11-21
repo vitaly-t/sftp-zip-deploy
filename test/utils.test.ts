@@ -50,6 +50,11 @@ class MockSSH extends EventEmitter {
         stream.emit('data', Buffer.from(command));
         stream.emit('close', 0);
     }
+
+    end(): this {
+        this.endCalls++;
+        return this;
+    }
 }
 
 function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
