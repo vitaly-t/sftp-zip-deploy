@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/vitaly-t/sftp-zip-deploy/actions/workflows/ci.yml/badge.svg)](https://github.com/vitaly-t/sftp-zip-deploy/actions/workflows/ci.yml)
 [![Node Version](https://img.shields.io/badge/nodejs-22%20--%2026-green.svg?logo=node.js&style=flat)](https://nodejs.org)
 
-Fast and efficient way to auto-deploy your project to a server:
+Fast zip deployment over SFTP for your project's distribution folder:
 
 - It zips your distribution folder and sends the archive to your server via SFTP
 - It supports remote commands for before / after zip deployment, via SSH2
