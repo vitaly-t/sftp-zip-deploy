@@ -41,25 +41,14 @@ class MockSSH extends EventEmitter {
     commands: string[] = [];
     endCalls = 0;
 
-    connect(): this {
-        this.connectCalls++;
-        setImmediate(() => this.emit('ready'));
-        return this;
-    }
-
     exec(command: string, callback: (err: Error | undefined, stream: EventEmitter & {stderr: EventEmitter}) => void): void {
         this.commands.push(command);
         const stream = Object.assign(new EventEmitter(), {stderr: new EventEmitter()});
         callback(undefined, stream);
-        setImmediate(() => {
-            stream.emit('data', Buffer.from(command));
-            stream.emit('close', 0);
-        });
-    }
-
-    end(): this {
-        this.endCalls++;
-        return this;
+        // The helper installs stream listeners in the callback. Emit only after
+        // that callback returns, without relying on runtime-specific scheduling.
+        stream.emit('data', Buffer.from(command));
+        stream.emit('close', 0);
     }
 }
 
@@ -73,11 +62,10 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
     replace(SftpClient.prototype, 'put', sftp.put.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
-    // The production code listens for events on its SSH2Client instance, so
-    // emit `ready` on that instance rather than on the separate MockSSH object.
     replace(SSH2Client.prototype, 'connect', function(this: SSH2Client) {
         ssh.connectCalls++;
-        setImmediate(() => this.emit('ready'));
+        // connectSSH2Client attaches its listener before calling connect.
+        this.emit('ready');
         return this;
     });
     replace(SSH2Client.prototype, 'exec', ssh.exec.bind(ssh));
