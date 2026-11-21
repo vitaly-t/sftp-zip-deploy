@@ -34,3 +34,10 @@ export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: 
         });
     });
 }
+
+/**
+ * Fixes Windows paths, by replacing every '\' with '/'
+ */
+export function fixWindowsPath(path: string): string {
+    return path.replace(/\\/g, '/');
+}

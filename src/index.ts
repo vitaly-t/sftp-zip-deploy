@@ -2,7 +2,7 @@ import {ISftpZipDeployConfig} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
 import {stat} from 'node:fs/promises';
-import {connectSSH2Client, execSSH2Command} from './utils.js';
+import {connectSSH2Client, execSSH2Command, fixWindowsPath} from './utils.js';
 import {zip} from 'zip-a-folder';
 import path from 'node:path';
 
@@ -32,8 +32,8 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         await zip(cfg.srcDir, zipPath);
         const {size} = await stat(zipPath);
         cfg.onZipReady?.(zipPath, size);
-        const remoteDir = cfg.destDir.replace(/\\/g, '/');
-        const zipName = path.posix.basename(zipPath.replace(/\\/g, '/'));
+        const remoteDir = fixWindowsPath(cfg.destDir);
+        const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
         await sftp.connect(cfg.cn);
         await sftp.put(zipPath, remotePath);
