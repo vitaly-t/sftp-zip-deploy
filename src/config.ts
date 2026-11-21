@@ -20,21 +20,11 @@ export interface ISftpZipDeployConfig {
     destDir: string;
 
     /**
-     * Optional name + location of the local zip file.
+     * Optional path to the local zip file.
      *
-     * It defaults to {dir: './', name: 'release.zip'},
-     * to create it in the root of your project.
+     * It defaults to './release.zip'
      */
-    zipFile?: {
-        /**
-         * Local directory where zip file is to be created. Default is './'
-         */
-        dir?: string,
-        /**
-         * Name for the local zip file. Default is 'release.zip'
-         */
-        name?: string
-    };
+    zipFile?: string;
 
     /**
      * Optional commands to execute before / after deploying the zip file.
@@ -53,18 +43,16 @@ export interface ISftpZipDeployConfig {
     }
 
     /**
-     * Optional filter on file enumeration (found in `srcDir`), returning:
-     *
-     *  - true for files to be added;
-     *  - false for files to be skipped.
+     * Notification when zip file has been built, and we are ready
+     * to start its transfer, passing local zip file + size.
      */
-    onFilter?: (file: string) => boolean;
+    onZipReady?: (localZip: string, size: number) => void;
 
     /**
-     * Notification when zip file has been built,
-     * and we are ready to start its transfer.
+     * Notification when zip file has been copied over via SFTP,
+     * passing remote zip file path + size.
      */
-    onZipReady?: (zd: IZipDetails) => void;
+    onZipDeployed?: (remoteZip: string, size: number) => void;
 
     /**
      * Notification of every output produced by a remote command.
@@ -82,29 +70,4 @@ export interface ISftpZipDeployConfig {
      * Set when normal/standard output is generated (not an error).
      */
     onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
-}
-
-/**
- * For use with onZipReady event.
- */
-export interface IZipDetails {
-    /**
-     * All files placed into zip.
-     */
-    files: string[];
-
-    /**
-     * Local path to the zip file.
-     */
-    zipLocalPath: string;
-
-    /**
-     * Remote path to the zip file (projected).
-     */
-    zipRemotePath: string;
-
-    /**
-     * Zip file size, in bytes.
-     */
-    zipSize: number;
 }
