@@ -33,7 +33,8 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         const {size} = await stat(zipPath);
         cfg.onZipReady?.(zipPath, size);
         const remoteDir = cfg.destDir.replace(/\\/g, '/');
-        const remotePath = path.posix.join(remoteDir, path.posix.basename(zipPath));
+        const zipName = path.posix.basename(zipPath.replace(/\\/g, '/'));
+        const remotePath = path.posix.join(remoteDir, zipName);
         await sftp.connect(cfg.cn);
         await sftp.put(zipPath, remotePath);
         cfg.onZipDeployed?.(remotePath, size);
