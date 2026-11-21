@@ -6,7 +6,8 @@ import {mkdtemp, mkdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {Client as SSH2Client} from 'ssh2';
 import SftpClient from 'ssh2-sftp-client';
 import {EventEmitter} from 'node:events';
-import {fixWindowsPath, zipAndDeploy} from '../dist/index.js';
+import {fixWindowsPath} from '../dist/utils.js';
+import {zipAndDeploy} from '../dist/index.js';
 
 async function fixture(): Promise<{ root: string; dir: string; zip: string }> {
     const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-'));
