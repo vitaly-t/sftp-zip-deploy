@@ -8,7 +8,7 @@ import SftpClient from 'ssh2-sftp-client';
 import {EventEmitter} from 'node:events';
 import {zipAndDeploy} from '../dist/index.js';
 
-async function fixture(): Promise<{root: string; dir: string; zip: string}> {
+async function fixture(): Promise<{ root: string; dir: string; zip: string }> {
     const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-'));
     const dir = path.join(root, 'source');
     const zip = path.join(root, 'release.zip');
@@ -41,7 +41,9 @@ class MockSSH extends EventEmitter {
     commands: string[] = [];
     endCalls = 0;
 
-    exec(command: string, callback: (err: Error | undefined, stream: EventEmitter & {stderr: EventEmitter}) => void): void {
+    exec(command: string, callback: (err: Error | undefined, stream: EventEmitter & {
+        stderr: EventEmitter
+    }) => void): void {
         this.commands.push(command);
         const stream = Object.assign(new EventEmitter(), {stderr: new EventEmitter()});
         callback(undefined, stream);
@@ -67,7 +69,7 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
     replace(SftpClient.prototype, 'put', sftp.put.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
-    replace(SSH2Client.prototype, 'connect', function(this: SSH2Client) {
+    replace(SSH2Client.prototype, 'connect', function (this: SSH2Client) {
         ssh.connectCalls++;
         // connectSSH2Client attaches its listener before calling connect.
         this.emit('ready');
