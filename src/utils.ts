@@ -3,14 +3,8 @@ import type {ConnectConfig} from 'ssh2';
 
 export function connectSSH2Client(client: SSH2Client, cn: ConnectConfig): Promise<SSH2Client> {
     return new Promise((resolve, reject) => {
-        client.once('ready', () => {
-            client.removeAllListeners();
-            resolve(client);
-        });
-        client.once('error', err => {
-            client.removeAllListeners();
-            reject(err);
-        });
+        client.once('ready', () => resolve(client));
+        client.once('error', err => reject(err));
         client.connect(cn);
     });
 }
