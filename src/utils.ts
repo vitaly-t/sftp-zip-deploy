@@ -12,10 +12,15 @@ export function connectSSH2Client(client: SSH2Client, cn: ConnectConfig): Promis
 export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: Buffer, std?: Buffer) => void): Promise<void> {
     return new Promise((resolve, reject) => {
         client.exec(cmd, (err, stream) => {
+            const onError = (err: any) => {
+                stream.removeAllListeners();
+                reject(err);
+            };
             if (err) {
-                return reject(err);
+                return onError(err);
             }
             stream.once('close', (code: number) => {
+                stream.removeAllListeners();
                 switch (code) {
                     case 0:
                         resolve();
@@ -26,10 +31,11 @@ export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: 
                         break;
                     default:
                         reject(new Error(`Command "${cmd}" exited with code ${code}`));
+                        break;
                 }
             });
-            stream.once('error', (err: any) => reject(err));
-            stream.stderr.once('error', (err: any) => reject(err));
+            stream.once('error', onError);
+            stream.stderr.once('error', onError);
             stream.on('data', (chunk: Buffer) => output(undefined, chunk));
             stream.stderr.on('data', (chunk: Buffer) => output(chunk, undefined));
         });
