@@ -46,10 +46,9 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
             chunkSize,
             step(totalTransferred: number, chunk: number, total: number) {
                 const percent = parseFloat((100 * totalTransferred / total).toFixed(2));
-                cfg.onUploadStep?.(percent, total);
+                cfg.onUploadStep?.(percent, totalTransferred);
             }
         });
-        // await sftp.put(zipPath, remotePath);
         cfg.onZipDeployed?.(remotePath, size);
         if (after) {
             await execSSH2Command(ssh2, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
