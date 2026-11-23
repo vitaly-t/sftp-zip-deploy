@@ -88,7 +88,7 @@ export interface ISftpZipDeployConfig {
     onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
 
     /**
-     * Notification of the ZIP upload progress.
+     * Notification of the ZIP upload progress, reported for every chunk.
      *
      * @param percent
      * Completion percent (0 - 100%).
