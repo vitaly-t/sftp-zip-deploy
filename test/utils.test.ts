@@ -21,15 +21,15 @@ async function fixture(): Promise<{ root: string; dir: string; zip: string }> {
 
 class MockSftp extends EventEmitter {
     connectCalls = 0;
-    putCalls: Array<[string, string]> = [];
+    fastPutCalls: Array<[string, string, {chunkSize: number}]> = [];
     endCalls = 0;
 
     async connect(): Promise<void> {
         this.connectCalls++;
     }
 
-    async put(local: string, remote: string): Promise<void> {
-        this.putCalls.push([local, remote]);
+    async fastPut(local: string, remote: string, options: {chunkSize: number}): Promise<void> {
+        this.fastPutCalls.push([local, remote, options]);
     }
 
     async end(): Promise<void> {
@@ -68,7 +68,7 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     };
 
     replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
-    replace(SftpClient.prototype, 'put', sftp.put.bind(sftp));
+    replace(SftpClient.prototype, 'fastPut', sftp.fastPut.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
     replace(SSH2Client.prototype, 'connect', function (this: SSH2Client) {
         ssh.connectCalls++;
@@ -129,7 +129,7 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
     assert.deepEqual(ready, [zip, archiveSize]);
     assert.deepEqual(deployed, ['/srv/app/dist/release.zip', archiveSize]);
     assert.equal(sftp.connectCalls, 1);
-    assert.deepEqual(sftp.putCalls, [[zip, '/srv/app/dist/release.zip']]);
+    assert.deepEqual(sftp.fastPutCalls, [[zip, '/srv/app/dist/release.zip', {chunkSize: 131072}]]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
@@ -181,7 +181,7 @@ test('zipAndDeploy uses release.zip and closes both clients', async (t) => {
         destDir: '/deploy'
     });
 
-    assert.deepEqual(sftp.putCalls, [['./release.zip', '/deploy/release.zip']]);
+    assert.deepEqual(sftp.fastPutCalls, [['./release.zip', '/deploy/release.zip', {chunkSize: 131072}]]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
