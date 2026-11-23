@@ -9,6 +9,11 @@ import {zip} from 'zip-a-folder';
 export {ISftpZipDeployConfig} from './config.js';
 export type {ConnectOptions} from 'ssh2-sftp-client';
 
+// Best all-around (131072 / 128 KB).
+// Recommended by Files.com and ExaVault as the safest starting point
+// to boost throughput without hitting server buffer caps:
+const chunkSize = 131072;
+
 /**
  * From the configuration object, it implements the following steps:
  *
@@ -37,7 +42,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
         await sftp.connect(cfg.cn);
-        await sftp.put(zipPath, remotePath);
+        await sftp.fastPut(zipPath, remotePath, {chunkSize});
         cfg.onZipDeployed?.(remotePath, size);
         if (after) {
             await execSSH2Command(ssh2, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
