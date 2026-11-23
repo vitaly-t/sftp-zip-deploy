@@ -93,14 +93,18 @@ Below is example of using the full potential of the events supported:
     },
     // Upload steps are reported for every chunk, which is too much for
     // dumping into the console, so we throttle it to report once a second:
-    onUploadStep: throttle(1000, (percent: number, total: number) => {
+    onUploadStep: throttle(1000, (percent, total) => {
         console.log(`${percent}% | ${total.toLocaleString()}`);
     })    
 }
 ```
 
+Throttling helper:
+
 ```ts
-// throttling helper:
+function throttle<A, B, C, D, E>(delay: number, fn: (p1: A, p2: B, p3: C, p4: D, p5: E) => void)
+    : (p1?: A, p2?: B, p3?: C, p4?: E, p5?: E) => void;
+
 function throttle(delay: number, fn: (...a: any[]) => void) {
     let lastCall = 0;
     return function (...args: any[]) {
