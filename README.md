@@ -72,4 +72,42 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 [onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L88
 [onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L99
 
+Below is example of using the full potential of the events supported:
+
+```ts
+{
+    onZipReady(localPath, size) {
+        console.log(`Compressed: ${localPath} | ${size.toLocaleString()} bytes`);
+    },
+    onZipDeployed(remotePath, size) {
+        console.log(`Transferred: ${remotePath} | ${size.toLocaleString()} bytes`);
+    },
+    onCmdOutput(cmd, err, std) {
+        if (err) {
+            console.error(colors.red(err.toString().trim()));
+        } else {
+        // You can output to the console: std?.toString().trim()
+        // but it will include report of every inflated file from zip
+        }
+    },
+    // Upload steps are reported for every chunk, which is too much for
+    // dumping into the console, so we throttle it to report once a second:
+    onUploadStep: throttle(1000, (percent: number, total: number) => {
+        console.log(`${percent}% | ${total.toLocaleString()}`);
+    })    
+}
+
+// throttling helper
+function throttle(delay: number, fn: (...a: any[]) => void) {
+    let lastCall = 0;
+    return function (...args: any[]) {
+        const now = Date.now();
+        if (now - lastCall >= delay) {
+            lastCall = now;
+            fn.apply(null, args);
+        }
+    }
+}
+```
+
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L7
