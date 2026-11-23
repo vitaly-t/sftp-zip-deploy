@@ -86,4 +86,15 @@ export interface ISftpZipDeployConfig {
      * Set when normal/standard output is generated (not an error).
      */
     onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
+
+    /**
+     * Notification of the ZIP upload progress.
+     *
+     * @param percent
+     * Completion percent (0 - 100%).
+     *
+     * @param total
+     * Total number of bytes transferred so far.
+     */
+    onTransferStep?: (percent: number, total: number) => void;
 }

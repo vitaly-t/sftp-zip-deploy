@@ -42,7 +42,14 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
         await sftp.connect(cfg.cn);
-        await sftp.fastPut(zipPath, remotePath, {chunkSize});
+        await sftp.fastPut(zipPath, remotePath, {
+            chunkSize,
+            step(totalTransferred: number, chunk: number, total: number) {
+                const percent = parseFloat((100 * totalTransferred / total).toFixed(2));
+                cfg.onTransferStep?.(percent, total);
+            }
+        });
+        // await sftp.put(zipPath, remotePath);
         cfg.onZipDeployed?.(remotePath, size);
         if (after) {
             await execSSH2Command(ssh2, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
