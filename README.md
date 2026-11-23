@@ -21,7 +21,7 @@ brought the time to under 10 seconds.
 ## Install
 
 ```
-npm i sftp-zip-deploy --save-dev
+npm i sftp-zip-deploy
 ```
 
 ## Usage
@@ -49,7 +49,7 @@ await zipAndDeploy({
         // remote command to execute after zip deployment:
         after: 'cd /root/web && unzip -o release.zip && npm i'
 
-        // also supports "before" command 
+        // it also supports "before" command 
     }
 });
 ```
@@ -70,4 +70,4 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 [onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L71
 [onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L88
 
-[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L6
+[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L7
