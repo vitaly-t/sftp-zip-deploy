@@ -96,7 +96,9 @@ Below is example of using the full potential of the events supported:
         console.log(`${percent}% | ${total.toLocaleString()}`);
     })    
 }
+```
 
+```ts
 // throttling helper
 function throttle(delay: number, fn: (...a: any[]) => void) {
     let lastCall = 0;
