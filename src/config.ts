@@ -94,7 +94,7 @@ export interface ISftpZipDeployConfig {
      * Completion percent (0 - 100%).
      *
      * @param total
-     * Total number of bytes transferred so far.
+     * Total number of bytes uploaded so far.
      */
-    onTransferStep?: (percent: number, total: number) => void;
+    onUploadStep?: (percent: number, total: number) => void;
 }

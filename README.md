@@ -65,9 +65,11 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 * [onZipReady] - notifies when local zip file is ready
 * [onZipDeployed] - notifies when zip file has been transferred
 * [onCmdOutput] - gets output from all remote commands
+* [onUploadStep] - tracks zip upload progress
 
 [onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L60
 [onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L71
 [onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L88
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L99
 
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L7

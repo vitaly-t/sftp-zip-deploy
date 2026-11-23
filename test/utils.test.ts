@@ -119,7 +119,7 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
 
     let ready: [string, number] | undefined;
     let deployed: [string, number] | undefined;
-    const transferSteps: Array<[number, number]> = [];
+    const uploadSteps: Array<[number, number]> = [];
 
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
@@ -128,7 +128,7 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
         zipFile: zip,
         onZipReady: (localPath, size) => ready = [localPath, size],
         onZipDeployed: (remotePath, size) => deployed = [remotePath, size],
-        onTransferStep: (percent, total) => transferSteps.push([percent, total])
+        onUploadStep: (percent, total) => uploadSteps.push([percent, total])
     });
 
     const archive = await readFile(zip);
@@ -142,7 +142,7 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
         [zip, '/srv/app/dist/release.zip', {chunkSize: 131072}]
     ]);
     assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
-    assert.deepEqual(transferSteps, [[25, 4], [100, 4]]);
+    assert.deepEqual(uploadSteps, [[25, 4], [100, 4]]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
