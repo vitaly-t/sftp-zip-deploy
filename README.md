@@ -84,7 +84,7 @@ Below is example of using the full potential of the events supported:
     },
     onCmdOutput(cmd, err, std) {
         if (err) {
-            console.error(colors.red(err.toString().trim()));
+            console.error(err.toString().trim());
         } else {
         // You can output to the console: std?.toString().trim()
         // but it will include report of every inflated file from zip
