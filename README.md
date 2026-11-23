@@ -3,11 +3,20 @@
 [![Build Status](https://github.com/vitaly-t/sftp-zip-deploy/actions/workflows/ci.yml/badge.svg)](https://github.com/vitaly-t/sftp-zip-deploy/actions/workflows/ci.yml)
 [![Node Version](https://img.shields.io/badge/nodejs-22%20--%2026-green.svg?logo=node.js&style=flat)](https://nodejs.org)
 
-Fast zip deployment over SFTP for your project's distribution folder:
+Fast single-zip deployment over SFTP for your project's distribution folder:
 
 - It zips your distribution folder and sends the archive to your server via SFTP
 - It supports remote commands for before / after zip deployment, via SSH2
-- It provides detailed data about what is going on all the way
+- It provides details about what is going on all the way
+
+## Rationale
+
+This library was created because file-by-file deployments over SFTP are too slow,
+especially for large projects.
+
+For example, my project that produced about 100 files for distribution, was taking about
+4 minutes to re-deploy, while on 1Gbt Internet. Switching over to this single-zip deployment
+brought the time to under 10 seconds.
 
 ## Install
 
