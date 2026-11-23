@@ -86,8 +86,9 @@ Below is example of using the full potential of the events supported:
         if (err) {
             console.error(err.toString().trim());
         } else {
-        // You can output to the console: std?.toString().trim()
-        // but it will include report of every inflated file from zip
+            // You can output to the console: std?.toString().trim()
+            // but it will include report of every inflated file from zip,
+            // which may be too much output for the console
         }
     },
     // Upload steps are reported for every chunk, which is too much for
@@ -99,7 +100,7 @@ Below is example of using the full potential of the events supported:
 ```
 
 ```ts
-// throttling helper
+// throttling helper:
 function throttle(delay: number, fn: (...a: any[]) => void) {
     let lastCall = 0;
     return function (...args: any[]) {
