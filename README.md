@@ -103,7 +103,7 @@ Throttling helper:
 
 ```ts
 function throttle<A, B, C, D, E>(delay: number, fn: (p1: A, p2: B, p3: C, p4: D, p5: E) => void)
-    : (p1?: A, p2?: B, p3?: C, p4?: E, p5?: E) => void;
+    : (p1?: A, p2?: B, p3?: C, p4?: D, p5?: E) => void;
 
 function throttle(delay: number, fn: (...a: any[]) => void) {
     let lastCall = 0;
