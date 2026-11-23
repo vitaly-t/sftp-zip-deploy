@@ -19,17 +19,24 @@ async function fixture(): Promise<{ root: string; dir: string; zip: string }> {
     return {root, dir, zip};
 }
 
+type FastPutOptions = {
+    chunkSize: number;
+    step?: (totalTransferred: number, chunk: number, total: number) => void;
+};
+
 class MockSftp extends EventEmitter {
     connectCalls = 0;
-    fastPutCalls: Array<[string, string, {chunkSize: number}]> = [];
+    fastPutCalls: Array<[string, string, FastPutOptions]> = [];
     endCalls = 0;
 
     async connect(): Promise<void> {
         this.connectCalls++;
     }
 
-    async fastPut(local: string, remote: string, options: {chunkSize: number}): Promise<void> {
+    async fastPut(local: string, remote: string, options: FastPutOptions): Promise<void> {
         this.fastPutCalls.push([local, remote, options]);
+        options.step?.(1, 1, 4);
+        options.step?.(4, 3, 4);
     }
 
     async end(): Promise<void> {
@@ -112,6 +119,7 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
 
     let ready: [string, number] | undefined;
     let deployed: [string, number] | undefined;
+    const transferSteps: Array<[number, number]> = [];
 
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
@@ -119,7 +127,8 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
         destDir: '/srv/app\\dist',
         zipFile: zip,
         onZipReady: (localPath, size) => ready = [localPath, size],
-        onZipDeployed: (remotePath, size) => deployed = [remotePath, size]
+        onZipDeployed: (remotePath, size) => deployed = [remotePath, size],
+        onTransferStep: (percent, total) => transferSteps.push([percent, total])
     });
 
     const archive = await readFile(zip);
@@ -129,7 +138,11 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
     assert.deepEqual(ready, [zip, archiveSize]);
     assert.deepEqual(deployed, ['/srv/app/dist/release.zip', archiveSize]);
     assert.equal(sftp.connectCalls, 1);
-    assert.deepEqual(sftp.fastPutCalls, [[zip, '/srv/app/dist/release.zip', {chunkSize: 131072}]]);
+    assert.deepEqual(sftp.fastPutCalls.map(([local, remote, {chunkSize}]) => [local, remote, {chunkSize}]), [
+        [zip, '/srv/app/dist/release.zip', {chunkSize: 131072}]
+    ]);
+    assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
+    assert.deepEqual(transferSteps, [[25, 4], [100, 4]]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
@@ -181,7 +194,10 @@ test('zipAndDeploy uses release.zip and closes both clients', async (t) => {
         destDir: '/deploy'
     });
 
-    assert.deepEqual(sftp.fastPutCalls, [['./release.zip', '/deploy/release.zip', {chunkSize: 131072}]]);
+    assert.deepEqual(sftp.fastPutCalls.map(([local, remote, {chunkSize}]) => [local, remote, {chunkSize}]), [
+        ['./release.zip', '/deploy/release.zip', {chunkSize: 131072}]
+    ]);
+    assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
