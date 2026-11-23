@@ -142,7 +142,7 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
         [zip, '/srv/app/dist/release.zip', {chunkSize: 131072}]
     ]);
     assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
-    assert.deepEqual(uploadSteps, [[25, 4], [100, 4]]);
+    assert.deepEqual(uploadSteps, [[25, 1], [100, 4]]);
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
@@ -201,3 +201,4 @@ test('zipAndDeploy uses release.zip and closes both clients', async (t) => {
     assert.equal(sftp.endCalls, 1);
     assert.equal(ssh.endCalls, 1);
 });
+
