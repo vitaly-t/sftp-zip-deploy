@@ -67,11 +67,6 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 * [onCmdOutput] - gets output from all remote commands
 * [onUploadStep] - tracks zip upload progress
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L60
-[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L71
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L88
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L99
-
 Below is example of using the full potential of the events supported:
 
 ```ts
@@ -99,11 +94,12 @@ Below is example of using the full potential of the events supported:
 }
 ```
 
-Throttling helper:
+<details>
+<summary><b>See generic throttling helper</b></summary>
 
 ```ts
-function throttle<A, B, C, D, E>(delay: number, fn: (p1: A, p2: B, p3: C, p4: D, p5: E) => void)
-    : (p1?: A, p2?: B, p3?: C, p4?: D, p5?: E) => void;
+function throttle<T, A, B, C, D, E>(delay: number, fn: (p1: A, p2: B, p3: C, p4: D, p5: E) => T)
+    : (p1?: A, p2?: B, p3?: C, p4?: E, p5?: E) => T;
 
 function throttle(delay: number, fn: (...a: any[]) => void) {
     let lastCall = 0;
@@ -111,10 +107,16 @@ function throttle(delay: number, fn: (...a: any[]) => void) {
         const now = Date.now();
         if (now - lastCall >= delay) {
             lastCall = now;
-            fn.apply(null, args);
+            return fn.apply(null, args);
         }
     }
 }
 ```
 
+</details>
+
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L60
+[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L71
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L88
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L99
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L7
