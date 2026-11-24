@@ -101,11 +101,11 @@ function throttle<T, A, B, C, D, E>(delay: number, fn: (p1: A, p2: B, p3: C, p4:
 
 function throttle(delay: number, fn: (...a: any[]) => void) {
     let lastCall = 0;
-    return function (...args: any[]) {
+    return function (this: any, ...args: any[]) {
         const now = Date.now();
         if (now - lastCall >= delay) {
             lastCall = now;
-            return fn.apply(null, args);
+            return fn.apply(this, args);
         }
     }
 }

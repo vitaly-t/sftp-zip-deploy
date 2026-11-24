@@ -27,13 +27,13 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
     try {
         await sftp.connect(cfg.cn);
         if (before) {
-            await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
+            await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.call(cfg, before, err, std));
         }
         const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
         await zip(cfg.srcDir, zipPath, cfg.zipOptions);
         const {size} = await stat(zipPath);
-        cfg.onZipReady?.(zipPath, size);
+        cfg.onZipReady?.call(cfg, zipPath, size);
         const remoteDir = fixWindowsPath(cfg.destDir);
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
@@ -41,12 +41,12 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
             chunkSize,
             step(totalTransferred: number, chunk: number, total: number) {
                 const percent = parseFloat((100 * totalTransferred / total).toFixed(2));
-                cfg.onUploadStep?.(percent, totalTransferred);
+                cfg.onUploadStep?.call(cfg, percent, totalTransferred);
             }
         });
-        cfg.onZipDeployed?.(remotePath, size);
+        cfg.onZipDeployed?.call(cfg, remotePath, size);
         if (after) {
-            await executeCommand(sftp, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+            await executeCommand(sftp, after, (err, std) => cfg.onCmdOutput?.call(cfg, after, err, std));
         }
     } finally {
         await sftp.end();

@@ -57,7 +57,7 @@ export interface ISftpZipDeployConfig {
      * @param size
      * Size of the local zip file.
      */
-    onZipReady?: (localPath: string, size: number) => void;
+    onZipReady?: (this: ISftpZipDeployConfig, localPath: string, size: number) => void;
 
     /**
      * Notification when zip file has been copied over via SFTP.
@@ -68,7 +68,7 @@ export interface ISftpZipDeployConfig {
      * @param size
      * Size of the zip file transferred.
      */
-    onZipDeployed?: (remotePath: string, size: number) => void;
+    onZipDeployed?: (this: ISftpZipDeployConfig, remotePath: string, size: number) => void;
 
     /**
      * Notification of every output produced by a remote command.
@@ -85,7 +85,7 @@ export interface ISftpZipDeployConfig {
      * @param std
      * Set when normal/standard output is generated (not an error).
      */
-    onCmdOutput?: (cmd: string, err?: Buffer, std?: Buffer) => void;
+    onCmdOutput?: (this: ISftpZipDeployConfig, cmd: string, err?: Buffer, std?: Buffer) => void;
 
     /**
      * Notification of the ZIP upload progress, reported for every chunk.
@@ -96,5 +96,5 @@ export interface ISftpZipDeployConfig {
      * @param total
      * Total number of bytes uploaded so far.
      */
-    onUploadStep?: (percent: number, total: number) => void;
+    onUploadStep?: (this: ISftpZipDeployConfig, percent: number, total: number) => void;
 }
