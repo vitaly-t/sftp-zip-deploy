@@ -118,8 +118,8 @@ function throttle(delay: number, fn: (this: any, ...a: any[]) => void) {
 
 </details>
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L60
-[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L71
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L88
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L99
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L64
+[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L75
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L92
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L103
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L7
