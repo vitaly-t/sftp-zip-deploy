@@ -96,16 +96,16 @@ Below is example of using the full potential of the events supported:
 <summary><b>See generic throttling helper</b></summary>
 
 ```ts
-function throttle<T, A, B, C, D, E>(delay: number, fn: (p1: A, p2: B, p3: C, p4: D, p5: E) => T)
-    : (p1?: A, p2?: B, p3?: C, p4?: E, p5?: E) => T;
+function throttle<T, R, A, B, C, D, E>(delay: number, fn: (this: T, p1: A, p2: B, p3: C, p4: D, p5: E) => R)
+    : (this: T, p1?: A, p2?: B, p3?: C, p4?: D, p5?: E) => R;
 
-function throttle(delay: number, fn: (...a: any[]) => void) {
+function throttle(delay: number, fn: (this: any, ...a: any[]) => void) {
     let lastCall = 0;
     return function (this: any, ...args: any[]) {
         const now = Date.now();
         if (now - lastCall >= delay) {
             lastCall = now;
-            return fn.apply(this, args);
+            fn.apply(this, args);
         }
     }
 }
