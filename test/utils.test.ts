@@ -30,6 +30,7 @@ type CommandStream = EventEmitter & {
 };
 
 class MockSftp extends EventEmitter {
+    client?: MockSSH;
     connectCalls = 0;
     fastPutCalls: Array<[string, string, FastPutOptions]> = [];
     endCalls = 0;
@@ -52,6 +53,13 @@ class MockSftp extends EventEmitter {
 class MockSSH extends SSH2Client {
     commands: string[] = [];
 
+    constructor() {
+        super();
+        // executeCommand checks client.constructor.name, so expose the ssh2
+        // Client constructor while keeping the mock's overridden exec method.
+        Object.defineProperty(this, 'constructor', {value: SSH2Client});
+    }
+
     override exec(command: string, callback: (err: Error | undefined, stream: CommandStream) => void): this {
         this.commands.push(command);
         const stream = makeCommandStream();
@@ -62,11 +70,6 @@ class MockSSH extends SSH2Client {
         return this;
     }
 }
-
-// executeCommand intentionally checks the runtime constructor name to guard
-// compatibility with ssh2-sftp-client. Make the test double look like ssh2's
-// Client while retaining its test-specific behavior.
-Object.defineProperty(MockSSH, 'name', {value: 'Client'});
 
 function makeCommandStream(): CommandStream {
     return Object.assign(new EventEmitter(), {
@@ -86,20 +89,14 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'fastPut', sftp.fastPut.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
 
-    const clientDescriptor = Object.getOwnPropertyDescriptor(SftpClient.prototype, 'client');
-    if (clientDescriptor) {
-        overrides.push([SftpClient.prototype, 'client', clientDescriptor]);
-        Object.defineProperty(SftpClient.prototype, 'client', {
-            configurable: true,
-            get() {
-                return ssh;
-            }
-        });
-    }
-
+    // Direct executeCommand unit tests use MockSftp; the integration-style
+    // zipAndDeploy tests use the real SftpClient, whose underlying SSH2
+    // client's exec method is replaced below.
+    sftp.client = ssh;
     replace(SSH2Client.prototype, 'exec', ssh.exec.bind(ssh));
 
     return () => {
+        sftp.client = undefined;
         for (const [prototype, key, descriptor] of overrides.reverse()) {
             if (descriptor) {
                 Object.defineProperty(prototype, key, descriptor);
