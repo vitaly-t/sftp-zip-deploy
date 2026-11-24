@@ -77,16 +77,20 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
     replace(SftpClient.prototype, 'fastPut', sftp.fastPut.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
-    replace(SSH2Client.prototype, 'connect', function (this: SSH2Client) {
-        ssh.connectCalls++;
-        // connectSSH2Client attaches its listener before calling connect.
-        this.emit('ready');
-        return this;
+
+    // The implementation executes commands through the SSH2 client owned by
+    // ssh2-sftp-client. Attach that client to each mocked SFTP instance.
+    Object.defineProperty(SftpClient.prototype, 'client', {
+        configurable: true,
+        get() {
+            return ssh;
+        }
     });
+
     replace(SSH2Client.prototype, 'exec', ssh.exec.bind(ssh));
-    replace(SSH2Client.prototype, 'end', ssh.end.bind(ssh));
 
     return () => {
+        delete (SftpClient.prototype as unknown as Record<string, unknown>).client;
         for (const [prototype, key, descriptor] of overrides.reverse()) {
             if (descriptor) {
                 Object.defineProperty(prototype, key, descriptor);
@@ -144,7 +148,6 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
     assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
     assert.deepEqual(uploadSteps, [[25, 1], [100, 4]]);
     assert.equal(sftp.endCalls, 1);
-    assert.equal(ssh.endCalls, 1);
 });
 
 test('zipAndDeploy executes before/after commands and forwards command output', async (t) => {
@@ -166,13 +169,12 @@ test('zipAndDeploy executes before/after commands and forwards command output', 
     });
 
     assert.deepEqual(ssh.commands, ['echo before', 'echo after']);
-    assert.equal(ssh.connectCalls, 1);
+    assert.equal(sftp.connectCalls, 1);
     assert.deepEqual(output, ['echo before', 'echo after']);
     assert.equal(sftp.endCalls, 1);
-    assert.equal(ssh.endCalls, 1);
 });
 
-test('zipAndDeploy uses release.zip and closes both clients', async (t) => {
+test('zipAndDeploy uses release.zip and closes the SFTP client', async (t) => {
     const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-default-'));
     const dir = path.join(root, 'source');
     const originalCwd = process.cwd();
@@ -199,6 +201,4 @@ test('zipAndDeploy uses release.zip and closes both clients', async (t) => {
     ]);
     assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
     assert.equal(sftp.endCalls, 1);
-    assert.equal(ssh.endCalls, 1);
 });
-
