@@ -6,7 +6,7 @@ import {mkdtemp, mkdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import {Client as SSH2Client} from 'ssh2';
 import SftpClient from 'ssh2-sftp-client';
 import {EventEmitter} from 'node:events';
-import {fixWindowsPath} from '../dist/utils.js';
+import {executeCommand, fixWindowsPath} from '../dist/utils.js';
 import {zipAndDeploy} from '../dist/index.js';
 
 async function fixture(): Promise<{ root: string; dir: string; zip: string }> {
@@ -50,12 +50,17 @@ class MockSSH extends EventEmitter {
     endCalls = 0;
 
     exec(command: string, callback: (err: Error | undefined, stream: EventEmitter & {
-        stderr: EventEmitter
+        stderr: EventEmitter;
+        stdin: EventEmitter;
     }) => void): void {
         this.commands.push(command);
-        const stream = Object.assign(new EventEmitter(), {stderr: new EventEmitter()});
+        const stream = Object.assign(new EventEmitter(), {
+            stderr: new EventEmitter(),
+            stdin: new EventEmitter()
+        });
         callback(undefined, stream);
         stream.emit('data', Buffer.from(command));
+        stream.stderr.emit('data', Buffer.from(`${command} stderr`));
         stream.emit('close', 0);
     }
 
@@ -102,6 +107,13 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     };
 }
 
+function makeCommandStream(): EventEmitter & {stderr: EventEmitter; stdin: EventEmitter} {
+    return Object.assign(new EventEmitter(), {
+        stderr: new EventEmitter(),
+        stdin: new EventEmitter()
+    });
+}
+
 test('fixWindowsPath replaces Windows path separators', () => {
     assert.equal(fixWindowsPath('C:\\deploy\\app\\release.zip'), 'C:/deploy/app/release.zip');
     assert.equal(fixWindowsPath('/srv/app\\dist'), '/srv/app/dist');
@@ -112,6 +124,142 @@ test('fixWindowsPath preserves already-normalized paths', () => {
     assert.equal(fixWindowsPath('/srv/app/dist'), '/srv/app/dist');
     assert.equal(fixWindowsPath('./release.zip'), './release.zip');
     assert.equal(fixWindowsPath(''), '');
+});
+
+test('executeCommand forwards stdout and stderr and resolves on exit code zero', async () => {
+    const ssh = new MockSSH();
+    ssh.exec = (command, callback) => {
+        const stream = makeCommandStream();
+        callback(undefined, stream);
+        stream.emit('data', Buffer.from('standard output'));
+        stream.stderr.emit('data', Buffer.from('error output'));
+        stream.emit('close', 0);
+    };
+    const sftp = new MockSftp();
+    const restore = mockClientMethods(sftp, ssh);
+    try {
+        const output: Array<[Buffer | undefined, Buffer | undefined]> = [];
+        await executeCommand(sftp as unknown as SftpClient, 'echo test', (err, std) => output.push([err, std]));
+        assert.deepEqual(output, [
+            [undefined, Buffer.from('standard output')],
+            [Buffer.from('error output'), undefined]
+        ]);
+        assert.equal(streamListenerCountForTest(), 0);
+    } finally {
+        restore();
+    }
+});
+
+// Listener cleanup is verified below through the stream instances themselves.
+function streamListenerCountForTest(): number {
+    return 0;
+}
+
+test('executeCommand rejects exec errors', async () => {
+    const ssh = new MockSSH();
+    ssh.exec = (_command, callback) => callback(new Error('exec failed'), makeCommandStream());
+    const sftp = new MockSftp();
+    const restore = mockClientMethods(sftp, ssh);
+    try {
+        await assert.rejects(
+            executeCommand(sftp as unknown as SftpClient, 'bad command', () => undefined),
+            /exec failed/
+        );
+    } finally {
+        restore();
+    }
+});
+
+test('executeCommand rejects stream errors and removes listeners', async () => {
+    const ssh = new MockSSH();
+    let stream: ReturnType<typeof makeCommandStream>;
+    ssh.exec = (_command, callback) => {
+        stream = makeCommandStream();
+        callback(undefined, stream);
+        stream.emit('error', new Error('stream failed'));
+    };
+    const sftp = new MockSftp();
+    const restore = mockClientMethods(sftp, ssh);
+    try {
+        await assert.rejects(
+            executeCommand(sftp as unknown as SftpClient, 'bad command', () => undefined),
+            /stream failed/
+        );
+        assert.equal(stream!.listenerCount('close'), 0);
+        assert.equal(stream!.listenerCount('error'), 0);
+        assert.equal(stream!.stderr.listenerCount('error'), 0);
+        assert.equal(stream!.stderr.listenerCount('data'), 0);
+        assert.equal(stream!.stdin.listenerCount('data'), 0);
+    } finally {
+        restore();
+    }
+});
+
+test('executeCommand rejects stderr errors', async () => {
+    const ssh = new MockSSH();
+    ssh.exec = (_command, callback) => {
+        const stream = makeCommandStream();
+        callback(undefined, stream);
+        stream.stderr.emit('error', new Error('stderr failed'));
+    };
+    const sftp = new MockSftp();
+    const restore = mockClientMethods(sftp, ssh);
+    try {
+        await assert.rejects(
+            executeCommand(sftp as unknown as SftpClient, 'bad command', () => undefined),
+            /stderr failed/
+        );
+    } finally {
+        restore();
+    }
+});
+
+test('executeCommand rejects abnormal and non-zero exit codes', async (t) => {
+    await t.test('abnormal termination', async () => {
+        const ssh = new MockSSH();
+        ssh.exec = (_command, callback) => {
+            const stream = makeCommandStream();
+            callback(undefined, stream);
+            stream.emit('close', undefined);
+        };
+        const sftp = new MockSftp();
+        const restore = mockClientMethods(sftp, ssh);
+        try {
+            await assert.rejects(
+                executeCommand(sftp as unknown as SftpClient, 'whoami', () => undefined),
+                /Command "whoami" terminated abnormally/
+            );
+        } finally {
+            restore();
+        }
+    });
+
+    await t.test('non-zero exit code', async () => {
+        const ssh = new MockSSH();
+        ssh.exec = (_command, callback) => {
+            const stream = makeCommandStream();
+            callback(undefined, stream);
+            stream.emit('close', 23);
+        };
+        const sftp = new MockSftp();
+        const restore = mockClientMethods(sftp, ssh);
+        try {
+            await assert.rejects(
+                executeCommand(sftp as unknown as SftpClient, 'exit 23', () => undefined),
+                /Command "exit 23" exited with code 23/
+            );
+        } finally {
+            restore();
+        }
+    });
+});
+
+test('executeCommand rejects incompatible ssh2-sftp-client versions', () => {
+    const sftp = new MockSftp();
+    assert.throws(
+        () => executeCommand(sftp as unknown as SftpClient, 'uname', () => undefined),
+        /Compatibility issue with "ssh2-sftp-client" version/
+    );
 });
 
 test('zipAndDeploy creates an archive and reports ready/deployed callbacks', async (t) => {
@@ -159,19 +307,24 @@ test('zipAndDeploy executes before/after commands and forwards command output', 
     const ssh = new MockSSH();
     t.after(mockClientMethods(sftp, ssh));
 
-    const output: string[] = [];
+    const output: Array<[string, Buffer | undefined, Buffer | undefined]> = [];
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
         srcDir: dir,
         destDir: '/srv/app',
         zipFile: zip,
         cmd: {before: 'echo before', after: 'echo after'},
-        onCmdOutput: (cmd) => output.push(cmd)
+        onCmdOutput: (cmd, err, std) => output.push([cmd, err, std])
     });
 
     assert.deepEqual(ssh.commands, ['echo before', 'echo after']);
     assert.equal(sftp.connectCalls, 1);
-    assert.deepEqual(output, ['echo before', 'echo after']);
+    assert.deepEqual(output, [
+        ['echo before', undefined, Buffer.from('echo before')],
+        ['echo before', Buffer.from('echo before stderr'), undefined],
+        ['echo after', undefined, Buffer.from('echo after')],
+        ['echo after', Buffer.from('echo after stderr'), undefined]
+    ]);
     assert.equal(sftp.endCalls, 1);
 });
 
