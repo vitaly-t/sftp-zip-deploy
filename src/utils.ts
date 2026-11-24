@@ -19,7 +19,6 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
                 stream.off('data', onData);
                 stream.stderr.off('error', onError);
                 stream.stderr.off('data', onErrorData);
-                stream.stdin.off('data', onInputData);
             };
             const onError = (err: any) => {
                 removeListeners();
@@ -41,11 +40,6 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
                 }
             };
             stream.once('close', onClose);
-            const onInputData = (chunk: Buffer) => {
-                // For some reason, input can be received without any prompt on the server
-                // onError(new Error(`Command "${cmd}" triggerred input prompt.${chunk.toString()}`));
-            };
-            stream.stdin.once('data', onInputData);
             stream.once('error', onError);
             stream.stderr.once('error', onError);
             const onData = (chunk: Buffer) => {
