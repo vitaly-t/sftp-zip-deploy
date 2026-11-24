@@ -55,8 +55,6 @@ class MockSSH extends EventEmitter {
         this.commands.push(command);
         const stream = Object.assign(new EventEmitter(), {stderr: new EventEmitter()});
         callback(undefined, stream);
-        // The helper installs stream listeners in the callback. Emit only after
-        // that callback returns, without relying on runtime-specific scheduling.
         stream.emit('data', Buffer.from(command));
         stream.emit('close', 0);
     }
@@ -78,19 +76,22 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'fastPut', sftp.fastPut.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
 
-    // The implementation executes commands through the SSH2 client owned by
-    // ssh2-sftp-client. Attach that client to each mocked SFTP instance.
-    Object.defineProperty(SftpClient.prototype, 'client', {
-        configurable: true,
-        get() {
-            return ssh;
-        }
-    });
+    // ssh2-sftp-client creates this getter in its constructor. Provide the
+    // mocked SSH2 client through its own getter on the prototype instead.
+    const clientDescriptor = Object.getOwnPropertyDescriptor(SftpClient.prototype, 'client');
+    if (clientDescriptor) {
+        overrides.push([SftpClient.prototype, 'client', clientDescriptor]);
+        Object.defineProperty(SftpClient.prototype, 'client', {
+            configurable: true,
+            get() {
+                return ssh;
+            }
+        });
+    }
 
     replace(SSH2Client.prototype, 'exec', ssh.exec.bind(ssh));
 
     return () => {
-        delete (SftpClient.prototype as unknown as Record<string, unknown>).client;
         for (const [prototype, key, descriptor] of overrides.reverse()) {
             if (descriptor) {
                 Object.defineProperty(prototype, key, descriptor);
