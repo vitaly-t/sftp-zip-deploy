@@ -11,14 +11,14 @@ export interface ISftpZipDeployConfig {
     cn: ConnectOptions;
 
     /**
-     * Source directory (on the local machine). It cannot be empty.
-     *
-     * If the path doesn't exist, it is created recursively.
+     * Source directory (on the local machine).
+     * The property value cannot be empty.
      */
     srcDir: string;
 
     /**
-     * Destination directory (on the remote server). It cannot be empty.
+     * Destination directory (on the remote server).
+     * The property value cannot be empty.
      *
      * If the path doesn't exist, it is created recursively.
      */
@@ -26,8 +26,9 @@ export interface ISftpZipDeployConfig {
 
     /**
      * Optional local path + name for the local zip file.
-     *
      * It defaults to './release.zip'
+     *
+     * If the directory doesn't exist, it is created recursively.
      */
     zipFile?: string;
 
