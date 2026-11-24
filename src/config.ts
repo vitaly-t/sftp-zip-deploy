@@ -20,7 +20,7 @@ export interface ISftpZipDeployConfig {
     /**
      * Destination directory (on the remote server).
      *
-     * The path must exist, i.e. we do not create it.
+     * If the path doesn't exist, it is created recursively.
      */
     destDir: string;
 

@@ -37,6 +37,11 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         const remoteDir = fixWindowsPath(cfg.destDir);
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
+        await sftp.exists(remoteDir).then(e => {
+            if (!e) {
+                return sftp.mkdir(remoteDir, true);
+            }
+        });
         await sftp.fastPut(zipPath, remotePath, {
             chunkSize,
             step(totalTransferred: number, chunk: number, total: number) {
