@@ -1,9 +1,8 @@
 import {ISftpZipDeployConfig} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
-import {Client as SSH2Client} from 'ssh2';
 import {stat, mkdir} from 'node:fs/promises';
 import path from 'node:path';
-import {connectSSH2Client, execSSH2Command, fixWindowsPath} from './utils.js';
+import {execSSH2Command, fixWindowsPath} from './utils.js';
 import {zip} from 'zip-a-folder';
 
 export {ISftpZipDeployConfig} from './config.js';
@@ -24,14 +23,11 @@ const chunkSize = 131072;
  */
 export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
     const sftp = new SftpClient();
-    const ssh2 = new SSH2Client();
     const {before = '', after = ''} = cfg.cmd ?? {};
     try {
-        if (before || after) {
-            await connectSSH2Client(ssh2, cfg.cn);
-        }
+        await sftp.connect(cfg.cn);
         if (before) {
-            await execSSH2Command(ssh2, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
+            await execSSH2Command(sftp, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
         }
         const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
@@ -41,7 +37,6 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         const remoteDir = fixWindowsPath(cfg.destDir);
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
-        await sftp.connect(cfg.cn);
         await sftp.fastPut(zipPath, remotePath, {
             chunkSize,
             step(totalTransferred: number, chunk: number, total: number) {
@@ -51,10 +46,9 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         });
         cfg.onZipDeployed?.(remotePath, size);
         if (after) {
-            await execSSH2Command(ssh2, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+            await execSSH2Command(sftp, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
         }
     } finally {
-        ssh2.end();
         await sftp.end();
     }
 }

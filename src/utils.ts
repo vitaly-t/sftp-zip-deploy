@@ -1,15 +1,8 @@
+import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
-import type {ConnectConfig} from 'ssh2';
 
-export function connectSSH2Client(client: SSH2Client, cn: ConnectConfig): Promise<SSH2Client> {
-    return new Promise((resolve, reject) => {
-        client.once('ready', () => resolve(client));
-        client.once('error', err => reject(err));
-        client.connect(cn);
-    });
-}
-
-export function execSSH2Command(client: SSH2Client, cmd: string, output: (err?: Buffer, std?: Buffer) => void): Promise<void> {
+export function execSSH2Command(sftp: SftpClient, cmd: string, output: (err?: Buffer, std?: Buffer) => void): Promise<void> {
+    const client = (sftp as any).client as SSH2Client; // overriding ssh2-sftp-client (see #595 there)
     return new Promise((resolve, reject) => {
         client.exec(cmd, (err, stream) => {
             const onError = (err: any) => {
