@@ -79,12 +79,12 @@ Below is example of using the full potential of the events supported:
         console.log(`Deployed: ${remotePath} | ${s} KB`);
     },
     onCmdOutput(cmd, err, std) {
-        const cleanText = (err || std)?.toString().trim();
-        if (cleanText) {
+        const txt = (err || std)?.toString().trim();
+        if (txt) {
             if (err) {
-                console.error(cleanText); // err
+                console.error(txt); // err
             } else {
-                console.log(cleanText); // std
+                console.log(txt); // std
             }
         }
     },
