@@ -63,6 +63,11 @@ class MockSSH extends SSH2Client {
     }
 }
 
+// executeCommand intentionally checks the runtime constructor name to guard
+// compatibility with ssh2-sftp-client. Make the test double look like ssh2's
+// Client while retaining its test-specific behavior.
+Object.defineProperty(MockSSH, 'name', {value: 'Client'});
+
 function makeCommandStream(): CommandStream {
     return Object.assign(new EventEmitter(), {
         stderr: new EventEmitter(),
@@ -150,7 +155,7 @@ test('executeCommand forwards stdout and stderr and resolves on exit code zero',
 
 test('executeCommand rejects exec errors', async () => {
     const ssh = new MockSSH();
-    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+    ssh.exec = ((_command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
         callback(new Error('exec failed'), makeCommandStream());
         return ssh;
     }) as typeof ssh.exec;
@@ -170,7 +175,7 @@ test('executeCommand rejects exec errors', async () => {
 test('executeCommand rejects stream errors and removes listeners', async () => {
     const ssh = new MockSSH();
     let stream: CommandStream;
-    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+    ssh.exec = ((_command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
         stream = makeCommandStream();
         callback(undefined, stream);
         stream.emit('error', new Error('stream failed'));
@@ -196,7 +201,7 @@ test('executeCommand rejects stream errors and removes listeners', async () => {
 
 test('executeCommand rejects stderr errors', async () => {
     const ssh = new MockSSH();
-    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+    ssh.exec = ((_command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
         const stream = makeCommandStream();
         callback(undefined, stream);
         stream.stderr.emit('error', new Error('stderr failed'));
@@ -218,7 +223,7 @@ test('executeCommand rejects stderr errors', async () => {
 test('executeCommand rejects abnormal and non-zero exit codes', async (t) => {
     await t.test('abnormal termination', async () => {
         const ssh = new MockSSH();
-        ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+        ssh.exec = ((_command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
             const stream = makeCommandStream();
             callback(undefined, stream);
             stream.emit('close', undefined);
@@ -239,7 +244,7 @@ test('executeCommand rejects abnormal and non-zero exit codes', async (t) => {
 
     await t.test('non-zero exit code', async () => {
         const ssh = new MockSSH();
-        ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+        ssh.exec = ((_command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
             const stream = makeCommandStream();
             callback(undefined, stream);
             stream.emit('close', 23);
