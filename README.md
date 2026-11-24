@@ -72,10 +72,12 @@ Below is example of using the full potential of the events supported:
 ```ts
 {
     onZipReady(localPath, size) {
-        console.log(`Compressed: ${localPath} | ${size.toLocaleString()} bytes`);
+        const s = Math.round(size / 1024).toLocaleString();
+        console.log(`Compressed: ${localPath} | ${s} KB`);
     },
     onZipDeployed(remotePath, size) {
-        console.log(`Deployed: ${remotePath} | ${size.toLocaleString()} bytes`);
+        const s = Math.round(size / 1024).toLocaleString();
+        console.log(`Deployed: ${remotePath} | ${s} KB`);
     },
     onCmdOutput(cmd, err, std) {
         if (err) {
@@ -87,8 +89,9 @@ Below is example of using the full potential of the events supported:
     // Upload steps are reported for every chunk, which is too much for
     // dumping into the console, so we throttle it to report once a second:
     onUploadStep: throttle(1000, (percent, total) => {
-        console.log(`${percent}% | ${total.toLocaleString()}`);
-    })    
+        const t = Math.round(total / 1024).toLocaleString();
+        console.log(`${percent}% | ${t} KB`);
+    })
 }
 ```
 
