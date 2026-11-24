@@ -81,9 +81,7 @@ Below is example of using the full potential of the events supported:
         if (err) {
             console.error(err.toString().trim());
         } else {
-            // You can output to the console: std?.toString().trim()
-            // but it will include report of every inflated file from zip,
-            // which may be too much output for the console
+            console.log(std?.toString().trim());
         }
     },
     // Upload steps are reported for every chunk, which is too much for
