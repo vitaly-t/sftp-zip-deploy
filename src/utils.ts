@@ -16,6 +16,7 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
             const removeListeners = () => {
                 stream.off('close', onClose);
                 stream.off('error', onError);
+                stream.off('data', onData);
                 stream.stderr.off('error', onError);
                 stream.stderr.off('data', onErrorData);
                 stream.stdin.off('data', onInputData);
