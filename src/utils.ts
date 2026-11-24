@@ -10,15 +10,22 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
     }
     return new Promise((resolve, reject) => {
         client.exec(cmd, (err, stream) => {
+            if (err) {
+                return reject(err);
+            }
+            const removeListeners = () => {
+                stream.off('close', onClose);
+                stream.off('error', onError);
+                stream.stderr.off('error', onError);
+                stream.stderr.off('data', onErrorData);
+                stream.stdin.off('data', onInputData);
+            };
             const onError = (err: any) => {
-                stream.removeAllListeners();
+                removeListeners();
                 reject(err);
             };
-            if (err) {
-                return onError(err);
-            }
-            stream.once('close', (code: number) => {
-                stream.removeAllListeners();
+            const onClose = (code: number) => {
+                removeListeners();
                 switch (code) {
                     case 0:
                         resolve();
@@ -31,11 +38,23 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
                         reject(new Error(`Command "${cmd}" exited with code ${code}`));
                         break;
                 }
-            });
+            };
+            stream.once('close', onClose);
+            const onInputData = (chunk: Buffer) => {
+                // For some reason, input can be received without any prompt on the server
+                // onError(new Error(`Command "${cmd}" triggerred input prompt.${chunk.toString()}`));
+            };
+            stream.stdin.once('data', onInputData);
             stream.once('error', onError);
             stream.stderr.once('error', onError);
-            stream.on('data', (chunk: Buffer) => output(undefined, chunk));
-            stream.stderr.on('data', (chunk: Buffer) => output(chunk, undefined));
+            const onData = (chunk: Buffer) => {
+                output(undefined, chunk);
+            };
+            const onErrorData = (chunk: Buffer) => {
+                output(chunk, undefined);
+            };
+            stream.on('data', onData);
+            stream.stderr.on('data', onErrorData);
         });
     });
 }

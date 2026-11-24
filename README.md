@@ -55,8 +55,7 @@ await zipAndDeploy({
 ```
 
 Note that we use option `-o` (overwrite) with `unzip`, because otherwise the command may prompt for input,
-if files are already there, and this library does not deal with remote prompts, it will just get stuck.
-So avoid running commands that may trigger an input prompt.
+if files are already there, and this library doesn't work with remote prompts, it will just get stuck.
 
 ## API
 
