@@ -75,7 +75,7 @@ Below is example of using the full potential of the events supported:
         console.log(`Compressed: ${localPath} | ${size.toLocaleString()} bytes`);
     },
     onZipDeployed(remotePath, size) {
-        console.log(`Transferred: ${remotePath} | ${size.toLocaleString()} bytes`);
+        console.log(`Deployed: ${remotePath} | ${size.toLocaleString()} bytes`);
     },
     onCmdOutput(cmd, err, std) {
         if (err) {
