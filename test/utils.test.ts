@@ -32,11 +32,24 @@ type CommandStream = EventEmitter & {
 class MockSftp extends EventEmitter {
     client?: MockSSH;
     connectCalls = 0;
+    existsResult: string | false = 'd';
+    existsCalls: string[] = [];
+    mkdirCalls: Array<[string, boolean | undefined]> = [];
     fastPutCalls: Array<[string, string, FastPutOptions]> = [];
     endCalls = 0;
 
     async connect(): Promise<void> {
         this.connectCalls++;
+    }
+
+    async exists(remote: string): Promise<string | false> {
+        this.existsCalls.push(remote);
+        return this.existsResult;
+    }
+
+    async mkdir(remote: string, recursive?: boolean): Promise<string> {
+        this.mkdirCalls.push([remote, recursive]);
+        return remote;
     }
 
     async fastPut(local: string, remote: string, options: FastPutOptions): Promise<void> {
@@ -86,6 +99,8 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     };
 
     replace(SftpClient.prototype, 'connect', sftp.connect.bind(sftp));
+    replace(SftpClient.prototype, 'exists', sftp.exists.bind(sftp));
+    replace(SftpClient.prototype, 'mkdir', sftp.mkdir.bind(sftp));
     replace(SftpClient.prototype, 'fastPut', sftp.fastPut.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
 
@@ -269,11 +284,12 @@ test('executeCommand rejects incompatible ssh2-sftp-client versions', () => {
     );
 });
 
-test('zipAndDeploy creates an archive and reports ready/deployed callbacks', async (t) => {
+test('zipAndDeploy creates an archive, creates a missing remote directory, and reports callbacks', async (t) => {
     const {root, dir, zip} = await fixture();
     t.after(() => rm(root, {recursive: true, force: true}));
 
     const sftp = new MockSftp();
+    sftp.existsResult = false;
     const ssh = new MockSSH();
     t.after(mockClientMethods(sftp, ssh));
 
@@ -298,6 +314,8 @@ test('zipAndDeploy creates an archive and reports ready/deployed callbacks', asy
     assert.deepEqual(ready, [zip, archiveSize]);
     assert.deepEqual(deployed, ['/srv/app/dist/release.zip', archiveSize]);
     assert.equal(sftp.connectCalls, 1);
+    assert.deepEqual(sftp.existsCalls, ['/srv/app/dist']);
+    assert.deepEqual(sftp.mkdirCalls, [['/srv/app/dist', true]]);
     assert.deepEqual(sftp.fastPutCalls.map(([local, remote, {chunkSize}]) => [local, remote, {chunkSize}]), [
         [zip, '/srv/app/dist/release.zip', {chunkSize: 131072}]
     ]);
@@ -332,6 +350,8 @@ test('zipAndDeploy executes before/after commands and forwards command output', 
         ['echo after', undefined, Buffer.from('echo after')],
         ['echo after', Buffer.from('echo after stderr'), undefined]
     ]);
+    assert.deepEqual(sftp.existsCalls, ['/srv/app']);
+    assert.deepEqual(sftp.mkdirCalls, []);
     assert.equal(sftp.endCalls, 1);
 });
 
