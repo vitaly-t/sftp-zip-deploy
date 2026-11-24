@@ -24,6 +24,11 @@ type FastPutOptions = {
     step?: (totalTransferred: number, chunk: number, total: number) => void;
 };
 
+type CommandStream = EventEmitter & {
+    stderr: EventEmitter;
+    stdin: EventEmitter;
+};
+
 class MockSftp extends EventEmitter {
     connectCalls = 0;
     fastPutCalls: Array<[string, string, FastPutOptions]> = [];
@@ -44,30 +49,25 @@ class MockSftp extends EventEmitter {
     }
 }
 
-class MockSSH extends EventEmitter {
-    connectCalls = 0;
+class MockSSH extends SSH2Client {
     commands: string[] = [];
-    endCalls = 0;
 
-    exec(command: string, callback: (err: Error | undefined, stream: EventEmitter & {
-        stderr: EventEmitter;
-        stdin: EventEmitter;
-    }) => void): void {
+    override exec(command: string, callback: (err: Error | undefined, stream: CommandStream) => void): this {
         this.commands.push(command);
-        const stream = Object.assign(new EventEmitter(), {
-            stderr: new EventEmitter(),
-            stdin: new EventEmitter()
-        });
+        const stream = makeCommandStream();
         callback(undefined, stream);
         stream.emit('data', Buffer.from(command));
         stream.stderr.emit('data', Buffer.from(`${command} stderr`));
         stream.emit('close', 0);
-    }
-
-    end(): this {
-        this.endCalls++;
         return this;
     }
+}
+
+function makeCommandStream(): CommandStream {
+    return Object.assign(new EventEmitter(), {
+        stderr: new EventEmitter(),
+        stdin: new EventEmitter()
+    });
 }
 
 function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
@@ -81,8 +81,6 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     replace(SftpClient.prototype, 'fastPut', sftp.fastPut.bind(sftp));
     replace(SftpClient.prototype, 'end', sftp.end.bind(sftp));
 
-    // ssh2-sftp-client creates this getter in its constructor. Provide the
-    // mocked SSH2 client through its own getter on the prototype instead.
     const clientDescriptor = Object.getOwnPropertyDescriptor(SftpClient.prototype, 'client');
     if (clientDescriptor) {
         overrides.push([SftpClient.prototype, 'client', clientDescriptor]);
@@ -107,13 +105,6 @@ function mockClientMethods(sftp: MockSftp, ssh: MockSSH): () => void {
     };
 }
 
-function makeCommandStream(): EventEmitter & {stderr: EventEmitter; stdin: EventEmitter} {
-    return Object.assign(new EventEmitter(), {
-        stderr: new EventEmitter(),
-        stdin: new EventEmitter()
-    });
-}
-
 test('fixWindowsPath replaces Windows path separators', () => {
     assert.equal(fixWindowsPath('C:\\deploy\\app\\release.zip'), 'C:/deploy/app/release.zip');
     assert.equal(fixWindowsPath('/srv/app\\dist'), '/srv/app/dist');
@@ -128,13 +119,16 @@ test('fixWindowsPath preserves already-normalized paths', () => {
 
 test('executeCommand forwards stdout and stderr and resolves on exit code zero', async () => {
     const ssh = new MockSSH();
-    ssh.exec = (command, callback) => {
-        const stream = makeCommandStream();
+    let stream: CommandStream;
+    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+        stream = makeCommandStream();
         callback(undefined, stream);
         stream.emit('data', Buffer.from('standard output'));
         stream.stderr.emit('data', Buffer.from('error output'));
         stream.emit('close', 0);
-    };
+        return ssh;
+    }) as typeof ssh.exec;
+
     const sftp = new MockSftp();
     const restore = mockClientMethods(sftp, ssh);
     try {
@@ -144,20 +138,23 @@ test('executeCommand forwards stdout and stderr and resolves on exit code zero',
             [undefined, Buffer.from('standard output')],
             [Buffer.from('error output'), undefined]
         ]);
-        assert.equal(streamListenerCountForTest(), 0);
+        assert.equal(stream!.listenerCount('close'), 0);
+        assert.equal(stream!.listenerCount('error'), 0);
+        assert.equal(stream!.stderr.listenerCount('error'), 0);
+        assert.equal(stream!.stderr.listenerCount('data'), 0);
+        assert.equal(stream!.stdin.listenerCount('data'), 0);
     } finally {
         restore();
     }
 });
 
-// Listener cleanup is verified below through the stream instances themselves.
-function streamListenerCountForTest(): number {
-    return 0;
-}
-
 test('executeCommand rejects exec errors', async () => {
     const ssh = new MockSSH();
-    ssh.exec = (_command, callback) => callback(new Error('exec failed'), makeCommandStream());
+    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+        callback(new Error('exec failed'), makeCommandStream());
+        return ssh;
+    }) as typeof ssh.exec;
+
     const sftp = new MockSftp();
     const restore = mockClientMethods(sftp, ssh);
     try {
@@ -172,12 +169,14 @@ test('executeCommand rejects exec errors', async () => {
 
 test('executeCommand rejects stream errors and removes listeners', async () => {
     const ssh = new MockSSH();
-    let stream: ReturnType<typeof makeCommandStream>;
-    ssh.exec = (_command, callback) => {
+    let stream: CommandStream;
+    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
         stream = makeCommandStream();
         callback(undefined, stream);
         stream.emit('error', new Error('stream failed'));
-    };
+        return ssh;
+    }) as typeof ssh.exec;
+
     const sftp = new MockSftp();
     const restore = mockClientMethods(sftp, ssh);
     try {
@@ -197,11 +196,13 @@ test('executeCommand rejects stream errors and removes listeners', async () => {
 
 test('executeCommand rejects stderr errors', async () => {
     const ssh = new MockSSH();
-    ssh.exec = (_command, callback) => {
+    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
         const stream = makeCommandStream();
         callback(undefined, stream);
         stream.stderr.emit('error', new Error('stderr failed'));
-    };
+        return ssh;
+    }) as typeof ssh.exec;
+
     const sftp = new MockSftp();
     const restore = mockClientMethods(sftp, ssh);
     try {
@@ -217,11 +218,13 @@ test('executeCommand rejects stderr errors', async () => {
 test('executeCommand rejects abnormal and non-zero exit codes', async (t) => {
     await t.test('abnormal termination', async () => {
         const ssh = new MockSSH();
-        ssh.exec = (_command, callback) => {
+        ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
             const stream = makeCommandStream();
             callback(undefined, stream);
             stream.emit('close', undefined);
-        };
+            return ssh;
+        }) as typeof ssh.exec;
+
         const sftp = new MockSftp();
         const restore = mockClientMethods(sftp, ssh);
         try {
@@ -236,11 +239,13 @@ test('executeCommand rejects abnormal and non-zero exit codes', async (t) => {
 
     await t.test('non-zero exit code', async () => {
         const ssh = new MockSSH();
-        ssh.exec = (_command, callback) => {
+        ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
             const stream = makeCommandStream();
             callback(undefined, stream);
             stream.emit('close', 23);
-        };
+            return ssh;
+        }) as typeof ssh.exec;
+
         const sftp = new MockSftp();
         const restore = mockClientMethods(sftp, ssh);
         try {
