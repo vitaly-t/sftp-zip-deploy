@@ -79,7 +79,7 @@ Below is example of using the full potential of the events supported:
         console.log(`Deployed: ${remotePath} | ${s} KB`);
     },
     onCmdOutput(cmd, err, std) {
-        const cleanText = (err || std)?.toString().replace(/^\s*|\s*$/g, '');
+        const cleanText = (err || std)?.toString().trim();
         if (cleanText) {
             if (err) {
                 console.error(cleanText); // err
