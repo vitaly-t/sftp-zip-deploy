@@ -79,11 +79,13 @@ Below is example of using the full potential of the events supported:
         console.log(`Deployed: ${remotePath} | ${s} KB`);
     },
     onCmdOutput(cmd, err, std) {
-        const cleanOutput = (b?:Buffer) => b?.toString().replace(/^\s*|\s*$/g, '');
-        if (err) {
-            console.error(cleanOutput(err));
-        } else {
-            console.log(cleanOutput(std));
+        const cleanText = (err || std)?.toString().replace(/^\s*|\s*$/g, '');
+        if (cleanText) {
+            if (err) {
+                console.error(cleanText); // err
+            } else {
+                console.log(cleanText); // std
+            }
         }
     },
     // Upload steps are reported for every chunk, which is too much for
