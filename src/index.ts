@@ -2,7 +2,7 @@ import {ISftpZipDeployConfig} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
 import {stat, mkdir} from 'node:fs/promises';
 import path from 'node:path';
-import {execSSH2Command, fixWindowsPath} from './utils.js';
+import {executeCommand, fixWindowsPath} from './utils.js';
 import {zip} from 'zip-a-folder';
 
 export {ISftpZipDeployConfig} from './config.js';
@@ -27,7 +27,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
     try {
         await sftp.connect(cfg.cn);
         if (before) {
-            await execSSH2Command(sftp, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
+            await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.(before, err, std));
         }
         const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
@@ -46,7 +46,7 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         });
         cfg.onZipDeployed?.(remotePath, size);
         if (after) {
-            await execSSH2Command(sftp, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
+            await executeCommand(sftp, after, (err, std) => cfg.onCmdOutput?.(after, err, std));
         }
     } finally {
         await sftp.end();
