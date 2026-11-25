@@ -4,3 +4,4 @@ node_modules
 package-lock.json
 src/**/*.js
 *.zip
+*.7z

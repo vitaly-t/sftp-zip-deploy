@@ -124,9 +124,12 @@ In version 0.7.0, this library added support for 7-zip archives:
 
 Passing in `zipFile` with `.7z` file extension automatically changes the compression to 7-zip.
 
-7-zip compression is particularly good with text, source code and documents, resulting in 10-70%
-smaller archives. The only downside, you may need to install 7z unpacking tools on the server,
+7-zip compression is significantly faster and more efficient, often 60% better for text, source code
+and documents than zip. The only downside, you may need to install 7z unpacking tools on the server,
 while for zip it is a ubiquitous default.
+
+For example, typical for Linux is `p7zip-full` package, and then you can use `7z x -y release.7z`
+within `cmd.after`, where `-y` is to avoid input prompts.
 
 [onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L68
 [onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L79

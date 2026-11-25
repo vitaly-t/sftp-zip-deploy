@@ -1,5 +1,6 @@
 import {ConnectOptions} from 'ssh2-sftp-client';
-import {SevenZipArchiveOptions, ZipArchiveOptions} from 'zip-a-folder';
+import {ZipArchiveOptions} from 'zip-a-folder';
+import {I7zipOptions} from './7z.js';
 
 /**
  * Configuration structure, to be passed into `zipAndDeploy`.
@@ -37,9 +38,9 @@ export interface ISftpZipDeployConfig {
 
     /**
      * Options to be passed into `zip-a-folder` library
-     * when creating a zip (or 7z) archive.
+     * when creating a zip. It is not used for 7z.
      */
-    zipOptions?: ZipArchiveOptions | SevenZipArchiveOptions;
+    zipOptions?: ZipArchiveOptions | I7zipOptions;
 
     /**
      * Optional commands to execute before / after deploying the zip file.

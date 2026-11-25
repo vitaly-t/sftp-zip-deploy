@@ -3,8 +3,10 @@ import SftpClient from 'ssh2-sftp-client';
 import {stat, mkdir} from 'node:fs/promises';
 import path from 'node:path';
 import {executeCommand, fixWindowsPath} from './utils.js';
-import {sevenZip, zip} from 'zip-a-folder';
+import {zip, ZipArchiveOptions} from 'zip-a-folder';
+import {I7zipOptions, pack7z} from './7z.js';
 
+export {I7zipOptions} from './7z.js';
 export {ISftpZipDeployConfig} from './config.js';
 export type {ConnectOptions} from 'ssh2-sftp-client';
 
@@ -37,9 +39,9 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
         if (is_7z(zipPath)) {
-            await sevenZip(cfg.srcDir, zipPath, cfg.zipOptions);
+            await pack7z(cfg.srcDir, zipPath, cfg.zipOptions as I7zipOptions);
         } else {
-            await zip(cfg.srcDir, zipPath, cfg.zipOptions);
+            await zip(cfg.srcDir, zipPath, cfg.zipOptions as ZipArchiveOptions);
         }
         const {size} = await stat(zipPath);
         cfg.onZipReady?.call(cfg, zipPath, size);
