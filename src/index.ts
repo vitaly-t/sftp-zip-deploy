@@ -3,7 +3,7 @@ import SftpClient from 'ssh2-sftp-client';
 import {stat, mkdir} from 'node:fs/promises';
 import path from 'node:path';
 import {executeCommand, fixWindowsPath} from './utils.js';
-import {zip} from 'zip-a-folder';
+import {sevenZip, zip} from 'zip-a-folder';
 
 export {ISftpZipDeployConfig} from './config.js';
 export type {ConnectOptions} from 'ssh2-sftp-client';
@@ -12,6 +12,11 @@ export type {ConnectOptions} from 'ssh2-sftp-client';
 // Recommended by Files.com and ExaVault as the safest starting point
 // to boost throughput without hitting server buffer caps:
 const chunkSize = 131072;
+
+// Check for 7z file extension used in zipFile,
+// so we switch the compression engine to 7z:
+const is_7z = (s: string) =>
+    s.trim().toLowerCase().endsWith('.7z');
 
 /**
  * From the configuration object, it implements the following steps:
@@ -31,7 +36,11 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         }
         const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
-        await zip(cfg.srcDir, zipPath, cfg.zipOptions);
+        if (is_7z(zipPath)) {
+            await sevenZip(cfg.srcDir, zipPath, cfg.zipOptions);
+        } else {
+            await zip(cfg.srcDir, zipPath, cfg.zipOptions);
+        }
         const {size} = await stat(zipPath);
         cfg.onZipReady?.call(cfg, zipPath, size);
         const remoteDir = fixWindowsPath(cfg.destDir);

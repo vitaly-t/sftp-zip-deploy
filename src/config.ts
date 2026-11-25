@@ -1,5 +1,5 @@
 import {ConnectOptions} from 'ssh2-sftp-client';
-import {ZipArchiveOptions} from 'zip-a-folder';
+import {SevenZipArchiveOptions, ZipArchiveOptions} from 'zip-a-folder';
 
 /**
  * Configuration structure, to be passed into `zipAndDeploy`.
@@ -28,15 +28,18 @@ export interface ISftpZipDeployConfig {
      * Optional local path + name for the local zip file.
      * It defaults to './release.zip'
      *
+     * If the file name ends with `.7z`, the compression engine
+     * will automatically change to 7-zip.
+     *
      * If the directory doesn't exist, it is created recursively.
      */
     zipFile?: string;
 
     /**
      * Options to be passed into `zip-a-folder` library
-     * when creating a zip archive.
+     * when creating a zip (or 7z) archive.
      */
-    zipOptions?: ZipArchiveOptions;
+    zipOptions?: ZipArchiveOptions | SevenZipArchiveOptions;
 
     /**
      * Optional commands to execute before / after deploying the zip file.
