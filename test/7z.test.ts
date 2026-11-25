@@ -7,7 +7,7 @@ import SftpClient from 'ssh2-sftp-client';
 import {pack7z} from '../dist/7z.js';
 import {zipAndDeploy} from '../dist/index.js';
 
-async function fixture(): Promise<{root: string; dir: string; archive: string}> {
+async function fixture(): Promise<{ root: string; dir: string; archive: string }> {
     const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-7z-'));
     const dir = path.join(root, 'source');
     const archive = path.join(root, 'release.7z');
