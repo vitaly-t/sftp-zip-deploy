@@ -7,8 +7,8 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p src",
-    "test": "npm run build && node --test test/utils.test.ts",
-    "test:coverage": "npm run build && node --experimental-test-coverage --test test/utils.test.ts"
+    "test": "npm run build && node --test test/*.test.ts",
+    "test:coverage": "npm run build && node --experimental-test-coverage --test test/*.test.ts"
   },
   "files": [
     "dist"
