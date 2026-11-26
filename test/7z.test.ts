@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import {mkdtemp, mkdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import SftpClient from 'ssh2-sftp-client';
-import {pack7z} from '../dist/7z.js';
+import {pack7z, patch7zDir} from '../dist/7z.js';
 import {zipAndDeploy} from '../dist/index.js';
 
 async function fixture(): Promise<{ root: string; dir: string; archive: string }> {
@@ -78,6 +78,25 @@ function mockSftp(sftp: MockSftp): () => void {
         }
     };
 }
+
+test('patch7zDir ensures the path ends with /*', () => {
+    const cases: Array<[string, string]> = [
+        ['folder', 'folder/*'],
+        ['folder/', 'folder/*'],
+        ['folder\\', 'folder/*'],
+        ['folder/*', 'folder/*'],
+        ['folder*', 'folder/*'],
+        ['folder///\\**', 'folder/*'],
+        ['folder/*/child', 'folder/*/child/*'],
+        ['', '/*']
+    ];
+
+    for (const [input, expected] of cases) {
+        const actual = patch7zDir(input);
+        assert.equal(actual, expected, `patch7zDir(${JSON.stringify(input)})`);
+        assert.ok(actual.endsWith('/*'), `Expected ${JSON.stringify(actual)} to end with /*`);
+    }
+});
 
 test('pack7z creates a real 7z archive with compression and password options', async (t) => {
     const {root, dir, archive} = await fixture();
