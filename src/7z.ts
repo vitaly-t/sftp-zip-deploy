@@ -1,5 +1,5 @@
 import {spawn} from 'child_process';
-import {path7za} from '7zip-bin';
+import {path7z} from '7z-bin';
 
 /**
  * Options to be passed into `zipOptions`.
@@ -38,7 +38,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             // spawn passes this as one literal argv item (no shell), so don't add shell-style quotes.
             commands.push(`-p${opt.password}`);
         }
-        const proc = spawn(path7za, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
+        const proc = spawn(path7z, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
         const removeListeners = () => {
             proc.off('error', onError);
             proc.stderr.off('error', onError);
