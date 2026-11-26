@@ -5,7 +5,7 @@ import test from 'node:test';
 import {mkdtemp, mkdir, readFile, rm, stat, writeFile} from 'node:fs/promises';
 import SftpClient from 'ssh2-sftp-client';
 import {pack7z, patch7zDir} from '../dist/7z.js';
-import {zipAndDeploy} from '../dist/index.js';
+import {zipAndDeploy, type ZipType} from '../dist/index.js';
 
 async function fixture(): Promise<{ root: string; dir: string; archive: string }> {
     const root = await mkdtemp(path.join(os.tmpdir(), 'sftp-zip-deploy-7z-'));
@@ -118,9 +118,9 @@ test('zipAndDeploy creates, uploads, and reports a 7z archive', async (t) => {
     const restore = mockSftp(sftp);
     t.after(restore);
 
-    let ready: { localPath: string; size: number; zt: '7z' } | undefined;
-    let deployed: { remotePath: string; size: number; zt: '7z' } | undefined;
-    const uploadSteps: Array<{ percent: number; total: number; zt: '7z' }> = [];
+    let ready: { localPath: string; size: number; zt: ZipType } | undefined;
+    let deployed: { remotePath: string; size: number; zt: ZipType } | undefined;
+    const uploadSteps: Array<{ percent: number; total: number; zt: ZipType }> = [];
 
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
