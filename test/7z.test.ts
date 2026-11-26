@@ -99,9 +99,9 @@ test('zipAndDeploy creates, uploads, and reports a 7z archive', async (t) => {
     const restore = mockSftp(sftp);
     t.after(restore);
 
-    let ready: [string, number] | undefined;
-    let deployed: [string, number] | undefined;
-    const uploadSteps: Array<[number, number]> = [];
+    let ready: { localPath: string; size: number; zt: '7z' } | undefined;
+    let deployed: { remotePath: string; size: number; zt: '7z' } | undefined;
+    const uploadSteps: Array<{ percent: number; total: number; zt: '7z' }> = [];
 
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
@@ -109,22 +109,25 @@ test('zipAndDeploy creates, uploads, and reports a 7z archive', async (t) => {
         destDir: '/srv/app',
         zipFile: archive,
         zipOptions: {compression: 9, password: 'test-password'},
-        onZipReady: (localPath, size) => ready = [localPath, size],
-        onZipDeployed: (remotePath, size) => deployed = [remotePath, size],
-        onUploadStep: (percent, total) => uploadSteps.push([percent, total])
+        onZipReady: params => ready = params,
+        onZipDeployed: params => deployed = params,
+        onUploadStep: params => uploadSteps.push(params)
     });
 
     const bytes = await readFile(archive);
     const archiveSize = (await stat(archive)).size;
     assert.equal(bytes.subarray(0, 6).toString('hex'), '377abcaf271c');
-    assert.deepEqual(ready, [archive, archiveSize]);
-    assert.deepEqual(deployed, ['/srv/app/release.7z', archiveSize]);
+    assert.deepEqual(ready, {localPath: archive, size: archiveSize, zt: '7z'});
+    assert.deepEqual(deployed, {remotePath: '/srv/app/release.7z', size: archiveSize, zt: '7z'});
     assert.equal(sftp.connectCalls, 1);
     assert.deepEqual(sftp.existsCalls, ['/srv/app']);
     assert.deepEqual(sftp.fastPutCalls.map(([local, remote, {chunkSize}]) => [local, remote, {chunkSize}]), [
         [archive, '/srv/app/release.7z', {chunkSize: 131072}]
     ]);
     assert.equal(typeof sftp.fastPutCalls[0][2].step, 'function');
-    assert.deepEqual(uploadSteps, [[50, 2], [100, 4]]);
+    assert.deepEqual(uploadSteps, [
+        {percent: 50, total: 2, zt: '7z'},
+        {percent: 100, total: 4, zt: '7z'}
+    ]);
     assert.equal(sftp.endCalls, 1);
 });
