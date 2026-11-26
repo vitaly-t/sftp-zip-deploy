@@ -38,16 +38,33 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             commands.push(`-p${opt.password}`);
         }
         const proc = spawn(path7za, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
-        proc.on('error', (err: any) => {
+        const removeListeners = () => {
+            proc.off('error', onError);
+            proc.stderr.off('error', onError);
+            proc.off('close', onClose);
+        };
+        const onError = (err: Error) => {
+            removeListeners();
             reject(err);
-        });
-        proc.on('close', (code: number) => {
-            if (code === 0) {
-                resolve();
-            } else {
-                reject(new Error(`7zip process exited with code ${code}`));
+        };
+        proc.once('error', onError);
+        proc.stderr.once('error', onError);
+        const onClose = (code: number) => {
+            removeListeners();
+            switch (code) {
+                case 0:
+                    resolve();
+                    break;
+                case null:
+                case undefined:
+                    reject(new Error(`7z terminated abnormally`));
+                    break;
+                default:
+                    reject(new Error(`7zip process exited with code ${code}`));
+                    break;
             }
-        });
+        };
+        proc.once('close', onClose);
     });
 }
 
