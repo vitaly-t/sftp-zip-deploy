@@ -56,9 +56,11 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         });
         await sftp.fastPut(zipPath, remotePath, {
             chunkSize,
-            step(totalTransferred: number, chunk: number, total: number) {
-                const percent = parseFloat((100 * totalTransferred / total).toFixed(2));
-                cfg.onUploadStep?.call(cfg, {percent, total: totalTransferred, zt});
+            step(transferred: number, chunk: number, total: number) {
+                const percent = total > 0
+                    ? Math.min(100, parseFloat((100 * transferred / total).toFixed(2)))
+                    : 0;
+                cfg.onUploadStep?.call(cfg, {percent, total: transferred, zt});
             }
         });
         cfg.onZipDeployed?.call(cfg, {remotePath, size, zt});

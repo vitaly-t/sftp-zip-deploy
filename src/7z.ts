@@ -49,14 +49,13 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
         };
         proc.once('error', onError);
         proc.stderr.once('error', onError);
-        const onClose = (code: number) => {
+        const onClose = (code: number | null) => {
             removeListeners();
             switch (code) {
                 case 0:
                     resolve();
                     break;
                 case null:
-                case undefined:
                     reject(new Error(`7z terminated abnormally`));
                     break;
                 default:
