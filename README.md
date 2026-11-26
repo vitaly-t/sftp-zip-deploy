@@ -120,7 +120,7 @@ function throttle(delay: number, fn: (this: any, ...a: any[]) => void) {
 
 ### 7-zip Archives
 
-Passing in `zipFile` with `.7z` file extension automatically changes the compression to 7-zip.
+When using `zipFile` with `.7z` file extension, it automatically changes the compression to 7-zip.
 
 7-zip compression is significantly faster and more efficient, often 60% better for text, source code
 and documents than zip. The only downside, you may need to install 7z unpacking tools on the server,

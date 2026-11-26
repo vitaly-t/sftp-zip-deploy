@@ -19,9 +19,17 @@ export interface I7zipOptions {
     password?: string;
 }
 
+/**
+ * Compresses a folder into a 7z file as specified in the path.
+ *
+ * @private
+ *
+ * @param srcDir
+ * @param zipPath
+ * @param opt
+ */
 export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Promise<void> {
     return new Promise((resolve, reject) => {
-        const src = srcDir.replace(/[\\\/*]*$/, '/*');
         const commands = ['a'];
         if (opt?.compression) {
             commands.push(`-mx${opt?.compression}`);
@@ -29,7 +37,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
         if (opt?.password) {
             commands.push(`-p${opt.password}`);
         }
-        const proc = spawn(path7za, [...commands, zipPath, src], {windowsHide: true});
+        const proc = spawn(path7za, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
         proc.on('error', (err: any) => {
             reject(err);
         });
@@ -41,4 +49,18 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             }
         });
     });
+}
+
+/**
+ * 7z caveat is that it makes the last folder in the source directory
+ * the top directory inside the archive, which we do not want, as we
+ * want it to be consistent with how zip compression works.
+ *
+ * In order to avoid it, the directory needs to end with `/*`.
+ * This function makes sure, in a safe way, that it is always the case.
+ *
+ * @private
+ */
+export function patch7zDir(dir: string) {
+    return dir.replace(/[\\\/*]*$/, '/*');
 }
