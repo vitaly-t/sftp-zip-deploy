@@ -35,7 +35,8 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             commands.push(`-mx${opt?.compression}`);
         }
         if (opt?.password) {
-            commands.push(`-p"${opt.password}"`);
+            // spawn passes this as one literal argv item (no shell), so don't add shell-style quotes.
+            commands.push(`-p${opt.password}`);
         }
         const proc = spawn(path7za, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
         const removeListeners = () => {
