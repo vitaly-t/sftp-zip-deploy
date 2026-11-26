@@ -132,5 +132,5 @@ within `cmd.after`, where `-y` is to avoid input prompts.
 [onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L77
 [onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L94
 [onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L117
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L140
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L139
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L10

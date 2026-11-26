@@ -124,7 +124,6 @@ export interface ISftpZipDeployConfig {
     /**
      * Notification of the ZIP upload progress, reported for every chunk.
      *
-     *
      * @param params
      * Event parameters.
      *
