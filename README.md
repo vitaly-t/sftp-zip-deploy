@@ -70,15 +70,15 @@ Below is example of using the full potential of the events supported:
 
 ```ts
 {
-    onZipReady(localPath, size) {
+    onZipReady({localPath, size}) {
         const s = Math.round(size / 1024).toLocaleString();
         console.log(`Compressed: ${localPath} | ${s} KB`);
     },
-    onZipDeployed(remotePath, size) {
+    onZipDeployed({remotePath, size}) {
         const s = Math.round(size / 1024).toLocaleString();
         console.log(`Deployed: ${remotePath} | ${s} KB`);
     },
-    onCmdOutput(cmd, err, std) {
+    onCmdOutput({err, std}) {
         const txt = (err || std)?.toString().trim();
         if (txt) {
             if (err) {
@@ -90,7 +90,7 @@ Below is example of using the full potential of the events supported:
     },
     // Upload steps are reported for every chunk, which is too much for
     // dumping into the console, so we throttle it to report once a second:
-    onUploadStep: throttle(1000, (percent, total) => {
+    onUploadStep: throttle(1000, ({percent, total}) => {
         const t = Math.round(total / 1024).toLocaleString();
         console.log(`${percent}% | ${t} KB`);
     })
@@ -120,8 +120,6 @@ function throttle(delay: number, fn: (this: any, ...a: any[]) => void) {
 
 ### 7-zip Archives
 
-In version 0.7.0, this library added support for 7-zip archives:
-
 Passing in `zipFile` with `.7z` file extension automatically changes the compression to 7-zip.
 
 7-zip compression is significantly faster and more efficient, often 60% better for text, source code
@@ -131,8 +129,8 @@ while for zip it is a ubiquitous default.
 For example, typical for Linux is `p7zip-full` package, and then you can use `7z x -y release.7z`
 within `cmd.after`, where `-y` is to avoid input prompts.
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L68
-[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L79
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L96
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L107
-[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L7
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L77
+[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L94
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L117
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L140
+[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L10

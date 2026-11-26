@@ -1,4 +1,4 @@
-import {ISftpZipDeployConfig} from './config.js';
+import {ISftpZipDeployConfig, ZipType} from './config.js';
 import SftpClient from 'ssh2-sftp-client';
 import {stat, mkdir} from 'node:fs/promises';
 import path from 'node:path';
@@ -7,7 +7,7 @@ import {zip, ZipArchiveOptions} from 'zip-a-folder';
 import {I7zipOptions, pack7z} from './7z.js';
 
 export {I7zipOptions} from './7z.js';
-export {ISftpZipDeployConfig} from './config.js';
+export {ISftpZipDeployConfig, ZipType} from './config.js';
 export type {ConnectOptions} from 'ssh2-sftp-client';
 
 // Best all-around (131072 / 128 KB).
@@ -24,27 +24,28 @@ const is_7z = (s: string) =>
  * From the configuration object, it implements the following steps:
  *
  * 1. Executes `cmd.before` command (via SSH2), if such was specified
- * 2. Zips content of `srcDir` and triggers `onZipReady` (if specified)
- * 3. Uploads zip file to the remote machine (via SFTP) and triggers `onZipDeployed` (if specified)
+ * 2. Archives content of `srcDir` and triggers `onZipReady` (if specified)
+ * 3. Uploads archive file to the remote machine (via SFTP) and triggers `onZipDeployed` (if specified)
  * 4. Executes `cmd.after` command (via SSH2), if such was specified
  */
 export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
     const sftp = new SftpClient();
     const {before = '', after = ''} = cfg.cmd ?? {};
+    const zipPath = cfg.zipFile || './release.zip';
+    const zt: ZipType = is_7z(zipPath) ? '7z' : 'zip';
     try {
         await sftp.connect(cfg.cn);
         if (before) {
-            await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.call(cfg, before, err, std));
+            await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.call(cfg, {cmd: before, err, std, zt}));
         }
-        const zipPath = cfg.zipFile || './release.zip';
         await mkdir(path.dirname(zipPath), {recursive: true});
-        if (is_7z(zipPath)) {
+        if (zt === '7z') {
             await pack7z(cfg.srcDir, zipPath, cfg.zipOptions as I7zipOptions);
         } else {
             await zip(cfg.srcDir, zipPath, cfg.zipOptions as ZipArchiveOptions);
         }
         const {size} = await stat(zipPath);
-        cfg.onZipReady?.call(cfg, zipPath, size);
+        cfg.onZipReady?.call(cfg, {localPath: zipPath, size, zt});
         const remoteDir = fixWindowsPath(cfg.destDir);
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
@@ -57,12 +58,12 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
             chunkSize,
             step(totalTransferred: number, chunk: number, total: number) {
                 const percent = parseFloat((100 * totalTransferred / total).toFixed(2));
-                cfg.onUploadStep?.call(cfg, percent, totalTransferred);
+                cfg.onUploadStep?.call(cfg, {percent, total: totalTransferred, zt});
             }
         });
-        cfg.onZipDeployed?.call(cfg, remotePath, size);
+        cfg.onZipDeployed?.call(cfg, {remotePath, size, zt});
         if (after) {
-            await executeCommand(sftp, after, (err, std) => cfg.onCmdOutput?.call(cfg, after, err, std));
+            await executeCommand(sftp, after, (err, std) => cfg.onCmdOutput?.call(cfg, {cmd: after, err, std, zt}));
         }
     } finally {
         await sftp.end();

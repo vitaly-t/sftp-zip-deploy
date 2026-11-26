@@ -1,6 +1,6 @@
 {
   "name": "sftp-zip-deploy",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Zip and deploy a folder via SFTP",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -32,7 +32,7 @@
     "node": ">=22.13"
   },
   "dependencies": {
-    "@types/node": "26.6.10",
+    "@types/node": "26.6.11",
     "@types/ssh2-sftp-client": "9.0.6",
     "7zip-bin": "5.2.0",
     "ssh2-sftp-client": "12.1.1",
