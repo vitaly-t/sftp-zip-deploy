@@ -137,7 +137,7 @@ test('fixWindowsPath preserves already-normalized paths', () => {
 test('executeCommand forwards stdout and stderr and resolves on exit code zero', async () => {
     const ssh = new MockSSH();
     let stream: CommandStream;
-    ssh.exec = ((command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
+    ssh.exec = ((_command: string, callback: (err: Error | undefined, stream: CommandStream) => void) => {
         stream = makeCommandStream();
         callback(undefined, stream);
         stream.emit('data', Buffer.from('standard output'));
@@ -302,9 +302,9 @@ test('zipAndDeploy creates an archive, creates a missing remote directory, and r
         srcDir: dir,
         destDir: '/srv/app\\dist',
         zipFile: zip,
-        onZipReady: (localPath, size) => ready = [localPath, size],
-        onZipDeployed: (remotePath, size) => deployed = [remotePath, size],
-        onUploadStep: (percent, total) => uploadSteps.push([percent, total])
+        onZipReady: ({localPath, size}) => ready = [localPath, size],
+        onZipDeployed: ({remotePath, size}) => deployed = [remotePath, size],
+        onUploadStep: ({percent, total}) => uploadSteps.push([percent, total])
     });
 
     const archive = await readFile(zip);
@@ -339,7 +339,7 @@ test('zipAndDeploy executes before/after commands and forwards command output', 
         destDir: '/srv/app',
         zipFile: zip,
         cmd: {before: 'echo before', after: 'echo after'},
-        onCmdOutput: (cmd, err, std) => output.push([cmd, err, std])
+        onCmdOutput: ({cmd, err, std}) => output.push([cmd, err, std])
     });
 
     assert.deepEqual(ssh.commands, ['echo before', 'echo after']);
