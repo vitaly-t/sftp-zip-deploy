@@ -69,18 +69,20 @@ class MockSSH extends SSH2Client {
     constructor() {
         super();
         // executeCommand checks client.constructor.name, so expose the ssh2
-        // Client constructor while keeping the mock's overridden exec method.
+        // Client constructor while keeping the mock's exec implementation.
         Object.defineProperty(this, 'constructor', {value: SSH2Client});
-    }
-
-    override exec(command: string, callback: (err: Error | undefined, stream: CommandStream) => void): this {
-        this.commands.push(command);
-        const stream = makeCommandStream();
-        callback(undefined, stream);
-        stream.emit('data', Buffer.from(command));
-        stream.stderr.emit('data', Buffer.from(`${command} stderr`));
-        stream.emit('close', 0);
-        return this;
+        Object.defineProperty(this, 'exec', {
+            configurable: true,
+            value: (command: string, callback: (err: Error | undefined, stream: CommandStream) => void): this => {
+                this.commands.push(command);
+                const stream = makeCommandStream();
+                callback(undefined, stream);
+                stream.emit('data', Buffer.from(command));
+                stream.stderr.emit('data', Buffer.from(`${command} stderr`));
+                stream.emit('close', 0);
+                return this;
+            }
+        });
     }
 }
 
