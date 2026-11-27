@@ -120,7 +120,7 @@ test('zipAndDeploy creates, uploads, and reports a 7z archive', async (t) => {
 
     let ready: { localPath: string; count: number; size: number; zt: ZipType } | undefined;
     let deployed: { remotePath: string; size: number; zt: ZipType } | undefined;
-    const uploadSteps: Array<{ percent: number; total: number; zt: ZipType }> = [];
+    const uploadSteps: Array<{ percent: number; total: number; }> = [];
 
     await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},

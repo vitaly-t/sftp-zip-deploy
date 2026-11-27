@@ -118,6 +118,8 @@ function throttle(delay: number, fn: (this: any, ...a: any[]) => void) {
 
 </details>
 
+Since version 0.9.0, `zipAndDeploy` resolves with [IZipDeploySummary].
+
 ### 7-zip Archives
 
 When using `zipFile` with `.7z` file extension, it automatically changes the compression to 7-zip.
@@ -129,8 +131,9 @@ while for zip it is a ubiquitous default.
 For example, typical for Linux is `p7zip-full` package, and then you can use `7z x -y release.7z`
 within `cmd.after`, where `-y` is to avoid input prompts.
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L80
-[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L102
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L125
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L147
-[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/config.ts#L10
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L80
+[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L102
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L125
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L144
+[ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L10
+[IZipDeploySummary]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L150

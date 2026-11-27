@@ -27,6 +27,7 @@ const is_7z = (s: string) =>
  * 2. Archives content of `srcDir` and triggers `onZipReady` (if specified)
  * 3. Uploads archive file to the remote machine (via SFTP) and triggers `onZipDeployed` (if specified)
  * 4. Executes `cmd.after` command (via SSH2), if such was specified
+ * 5. Resolves with a summary of the entire deployment.
  */
 export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<IZipDeploySummary> {
     const start = Date.now();
