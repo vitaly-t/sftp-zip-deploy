@@ -7,7 +7,7 @@ import {zip, ZipArchiveOptions} from 'zip-a-folder';
 import {I7zipOptions, pack7z} from './7z.js';
 
 export {I7zipOptions} from './7z.js';
-export {ISftpZipDeployConfig, ZipType} from './types.js';
+export {ISftpZipDeployConfig, IZipDeploySummary, ZipType} from './types.js';
 export type {ConnectOptions} from 'ssh2-sftp-client';
 
 // Best all-around (131072 / 128 KB).
