@@ -37,7 +37,6 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             commands.push(`-mx${opt?.compression}`);
         }
         if (opt?.password) {
-            // spawn passes this as one literal argv item (no shell), so don't add shell-style quotes.
             commands.push(`-p${opt.password}`);
         }
         const proc = spawn(path7z, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
@@ -68,7 +67,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             }
         };
         const onData = (chunk: Buffer) => {
-            const m = chunk.toString().match(/,\s*(\d+)\s*files/);
+            const m = chunk.toString().match(/(\d+)\s+files/);
             if (m) {
                 count = parseInt(m[1]);
             }
