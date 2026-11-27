@@ -73,6 +73,7 @@ class MockSSH extends SSH2Client {
         Object.defineProperty(this, 'constructor', {value: SSH2Client});
         Object.defineProperty(this, 'exec', {
             configurable: true,
+            writable: true,
             value: (command: string, callback: (err: Error | undefined, stream: CommandStream) => void): this => {
                 this.commands.push(command);
                 const stream = makeCommandStream();
