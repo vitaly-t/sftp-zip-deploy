@@ -70,9 +70,9 @@ Below is example of using the full potential of the events supported:
 
 ```ts
 {
-    onZipReady({localPath, size}) {
+    onZipReady({localPath, count, size}) {
         const s = Math.round(size / 1024).toLocaleString();
-        console.log(`Compressed: ${localPath} | ${s} KB`);
+        console.log(`Compressed ${count} files into ${localPath} | ${s} KB`);
     },
     onZipDeployed({remotePath, size}) {
         const s = Math.round(size / 1024).toLocaleString();

@@ -20,7 +20,8 @@ export interface I7zipOptions {
 }
 
 /**
- * Compresses a folder into a 7z file as specified in the path.
+ * Compresses a folder into a 7z file as specified in the path,
+ * and resolves with the number of files in the new archive.
  *
  * @private
  *
@@ -28,9 +29,10 @@ export interface I7zipOptions {
  * @param zipPath
  * @param opt
  */
-export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Promise<void> {
+export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Promise<{ count: number }> {
     return new Promise((resolve, reject) => {
         const commands = ['a'];
+        let count = 0;
         if (opt?.compression) {
             commands.push(`-mx${opt?.compression}`);
         }
@@ -43,6 +45,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             proc.off('error', onError);
             proc.stderr.off('error', onError);
             proc.off('close', onClose);
+            proc.stdout.off('data', onData);
         };
         const onError = (err: Error) => {
             removeListeners();
@@ -54,7 +57,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             removeListeners();
             switch (code) {
                 case 0:
-                    resolve();
+                    resolve({count});
                     break;
                 case null:
                     reject(new Error(`7z terminated abnormally`));
@@ -64,7 +67,14 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
                     break;
             }
         };
+        const onData = (chunk: Buffer) => {
+            const m = chunk.toString().match(/,\s*(\d+)\s*files/);
+            if (m) {
+                count = parseInt(m[1]);
+            }
+        };
         proc.once('close', onClose);
+        proc.stdout.on('data', onData);
     });
 }
 

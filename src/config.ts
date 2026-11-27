@@ -40,7 +40,7 @@ export interface ISftpZipDeployConfig {
 
     /**
      * Options to be passed into `zip-a-folder` library
-     * when creating a zip. It is not used for 7z.
+     * when creating a zip.
      */
     zipOptions?: ZipArchiveOptions | I7zipOptions;
 
@@ -68,13 +68,21 @@ export interface ISftpZipDeployConfig {
      * @param params.localPath
      * Path + name of the local zip file created.
      *
+     * @param params.count
+     * Number of files added into the archive.
+     *
      * @param params.size
      * Size of the local zip file.
      *
      * @param params.zt
      * Type of zip archive used: 'zip' or '7z'
      */
-    onZipReady?: (this: ISftpZipDeployConfig, params: { localPath: string, size: number, zt: ZipType }) => void;
+    onZipReady?: (this: ISftpZipDeployConfig, params: {
+        localPath: string,
+        count: number,
+        size: number,
+        zt: ZipType
+    }) => void;
 
     /**
      * Notification when zip file has been copied over via SFTP.

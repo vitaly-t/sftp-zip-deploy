@@ -39,13 +39,14 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
             await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.call(cfg, {cmd: before, err, std, zt}));
         }
         await mkdir(path.dirname(zipPath), {recursive: true});
+        let count = 0;
         if (zt === '7z') {
-            await pack7z(cfg.srcDir, zipPath, cfg.zipOptions as I7zipOptions);
+            count = (await pack7z(cfg.srcDir, zipPath, cfg.zipOptions as I7zipOptions)).count;
         } else {
-            await zip(cfg.srcDir, zipPath, cfg.zipOptions as ZipArchiveOptions);
+            count = (await zip(cfg.srcDir, zipPath, cfg.zipOptions as ZipArchiveOptions)).count;
         }
         const {size} = await stat(zipPath);
-        cfg.onZipReady?.call(cfg, {localPath: zipPath, size, zt});
+        cfg.onZipReady?.call(cfg, {localPath: zipPath, count, size, zt});
         const remoteDir = fixWindowsPath(cfg.destDir);
         const zipName = path.posix.basename(fixWindowsPath(zipPath));
         const remotePath = path.posix.join(remoteDir, zipName);
