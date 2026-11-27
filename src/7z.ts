@@ -17,6 +17,11 @@ export interface I7zipOptions {
      * Sets password on the archive.
      */
     password?: string;
+
+    /**
+     * Tracks archive packing progress, in percent.
+     */
+    onProgress?: (percent: number) => void;
 }
 
 /**
@@ -38,6 +43,10 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
         }
         if (opt?.password) {
             commands.push(`-p${opt.password}`);
+        }
+        const tracking = typeof opt?.onProgress === 'function';
+        if (tracking) {
+            commands.push('-aoa', '-bsp1');
         }
         const proc = spawn(path7z, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
         const removeListeners = () => {
@@ -67,9 +76,16 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             }
         };
         const onData = (chunk: Buffer) => {
-            const m = chunk.toString().match(/(\d+)\s+files/);
+            const s = chunk.toString().trim();
+            const m = s.match(/(\d+)\s+files/);
             if (m) {
                 count = parseInt(m[1]);
+            }
+            if (tracking) {
+                const a = s.match(/^(\d+)%\s/);
+                if (a) {
+                    opt.onProgress?.(parseInt(a[1]));
+                }
             }
         };
         proc.once('close', onClose);
