@@ -287,7 +287,7 @@ test('executeCommand rejects incompatible ssh2-sftp-client versions', () => {
     );
 });
 
-test('zipAndDeploy creates an archive, creates a missing remote directory, and reports callbacks', async (t) => {
+test('zipAndDeploy creates an archive, creates a missing remote directory, and reports callbacks and summary', async (t) => {
     const {root, dir, zip} = await fixture();
     t.after(() => rm(root, {recursive: true, force: true}));
 
@@ -300,7 +300,7 @@ test('zipAndDeploy creates an archive, creates a missing remote directory, and r
     let deployed: [string, number] | undefined;
     const uploadSteps: Array<[number, number]> = [];
 
-    await zipAndDeploy({
+    const summary = await zipAndDeploy({
         cn: {host: 'example.test', username: 'deploy'},
         srcDir: dir,
         destDir: '/srv/app\\dist',
@@ -316,6 +316,14 @@ test('zipAndDeploy creates an archive, creates a missing remote directory, and r
     assert.equal(archive.subarray(0, 4).toString('hex'), '504b0304');
     assert.deepEqual(ready, [zip, archiveSize]);
     assert.deepEqual(deployed, ['/srv/app/dist/release.zip', archiveSize]);
+    assert.deepEqual(summary, {
+        zip: {path: zip, files: 2, size: archiveSize, type: 'zip'},
+        srcDir: dir,
+        destPath: '/srv/app/dist/release.zip',
+        duration: summary.duration
+    });
+    assert.ok(Number.isFinite(summary.duration));
+    assert.ok(summary.duration >= 0);
     assert.equal(sftp.connectCalls, 1);
     assert.deepEqual(sftp.existsCalls, ['/srv/app/dist']);
     assert.deepEqual(sftp.mkdirCalls, [['/srv/app/dist', true]]);
