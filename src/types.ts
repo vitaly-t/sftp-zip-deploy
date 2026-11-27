@@ -140,9 +140,45 @@ export interface ISftpZipDeployConfig {
      *
      * @param params.total
      * Total number of bytes uploaded so far.
-     *
-     * @param params.zt
-     * Type of zip archive used: 'zip' or '7z'
      */
-    onUploadStep?: (this: ISftpZipDeployConfig, params: { percent: number, total: number, zt: ZipType }) => void;
+    onUploadStep?: (this: ISftpZipDeployConfig, params: { percent: number, total: number }) => void;
+}
+
+/**
+ * Deployment Summary.
+ */
+export interface IZipDeploySummary {
+    /**
+     * Information about the local zip archive.
+     */
+    zip: {
+        /**
+         * Local path to the archive file.
+         */
+        path: string,
+        /**
+         * Total number of files in the archive.
+         */
+        files: number,
+        /**
+         * Archive size, in bytes.
+         */
+        size: number,
+        /**
+         * Archive type: 'zip' or '7z'
+         */
+        type: ZipType
+    },
+    /**
+     * Source directory for compression.
+     */
+    srcDir: string;
+    /**
+     * Remote path to the deployed archive file.
+     */
+    destPath: string;
+    /**
+     * Time spent for the whole deployment process, in seconds.
+     */
+    duration: number;
 }

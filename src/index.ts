@@ -1,4 +1,4 @@
-import {ISftpZipDeployConfig, ZipType} from './config.js';
+import {ISftpZipDeployConfig, IZipDeploySummary, ZipType} from './types.js';
 import SftpClient from 'ssh2-sftp-client';
 import {stat, mkdir} from 'node:fs/promises';
 import path from 'node:path';
@@ -7,7 +7,7 @@ import {zip, ZipArchiveOptions} from 'zip-a-folder';
 import {I7zipOptions, pack7z} from './7z.js';
 
 export {I7zipOptions} from './7z.js';
-export {ISftpZipDeployConfig, ZipType} from './config.js';
+export {ISftpZipDeployConfig, ZipType} from './types.js';
 export type {ConnectOptions} from 'ssh2-sftp-client';
 
 // Best all-around (131072 / 128 KB).
@@ -28,7 +28,8 @@ const is_7z = (s: string) =>
  * 3. Uploads archive file to the remote machine (via SFTP) and triggers `onZipDeployed` (if specified)
  * 4. Executes `cmd.after` command (via SSH2), if such was specified
  */
-export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
+export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<IZipDeploySummary> {
+    const start = Date.now();
     const sftp = new SftpClient();
     const {before = '', after = ''} = cfg.cmd ?? {};
     const zipPath = cfg.zipFile || './release.zip';
@@ -68,6 +69,17 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<void> {
         if (after) {
             await executeCommand(sftp, after, (err, std) => cfg.onCmdOutput?.call(cfg, {cmd: after, err, std, zt}));
         }
+        return {
+            zip: {
+                path: zipPath,
+                files: count,
+                size,
+                type: zt
+            },
+            srcDir: cfg.srcDir,
+            destPath: remotePath,
+            duration: parseFloat(((Date.now() - start) / 1000).toFixed(1))
+        };
     } finally {
         await sftp.end();
     }
