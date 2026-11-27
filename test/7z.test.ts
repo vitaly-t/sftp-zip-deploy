@@ -118,7 +118,7 @@ test('zipAndDeploy creates, uploads, and reports a 7z archive', async (t) => {
     const restore = mockSftp(sftp);
     t.after(restore);
 
-    let ready: { localPath: string; size: number; zt: ZipType } | undefined;
+    let ready: { localPath: string; count: number; size: number; zt: ZipType } | undefined;
     let deployed: { remotePath: string; size: number; zt: ZipType } | undefined;
     const uploadSteps: Array<{ percent: number; total: number; zt: ZipType }> = [];
 
@@ -136,7 +136,7 @@ test('zipAndDeploy creates, uploads, and reports a 7z archive', async (t) => {
     const bytes = await readFile(archive);
     const archiveSize = (await stat(archive)).size;
     assert.equal(bytes.subarray(0, 6).toString('hex'), '377abcaf271c');
-    assert.deepEqual(ready, {localPath: archive, size: archiveSize, zt: '7z'});
+    assert.deepEqual(ready, {localPath: archive, count: 2, size: archiveSize, zt: '7z'});
     assert.deepEqual(deployed, {remotePath: '/srv/app/release.7z', size: archiveSize, zt: '7z'});
     assert.equal(sftp.connectCalls, 1);
     assert.deepEqual(sftp.existsCalls, ['/srv/app']);
