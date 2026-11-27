@@ -59,10 +59,10 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
                     resolve({count});
                     break;
                 case null:
-                    reject(new Error(`7z terminated abnormally`));
+                    reject(new Error(`7-zip process terminated abnormally`));
                     break;
                 default:
-                    reject(new Error(`7zip process exited with code ${code}`));
+                    reject(new Error(`7-zip process exited with code ${code}`));
                     break;
             }
         };
