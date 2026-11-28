@@ -20,6 +20,9 @@ export interface I7zipOptions {
 
     /**
      * Tracks archive packing progress, in percent.
+     *
+     * It is only invoked when building large archives,
+     * while for small archives it may never be called.
      */
     onProgress?: (percent: number) => void;
 }
