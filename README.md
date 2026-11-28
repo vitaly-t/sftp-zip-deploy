@@ -29,7 +29,7 @@ npm i sftp-zip-deploy
 In the example below, we deploy a NodeJS project into `/root/web` on our remote server.
 
 Once the zip file is deployed, we use `cmd.after` commands to set that folder as active, then unpack
-the archive and install the project's dependencies.
+the archive and install the project's PROD-only dependencies.
 
 ```ts
 import {zipAndDeploy} from 'sftp-zip-deploy';
@@ -47,7 +47,7 @@ await zipAndDeploy({
     zipFile: './release.zip', // this is the default
     cmd: {
         // remote command to execute after zip deployment:
-        after: 'cd /root/web && unzip -o release.zip && npm i'
+        after: 'cd /root/web && unzip -o release.zip && npm i --omit=dev'
 
         // it also supports "before" command 
     }
