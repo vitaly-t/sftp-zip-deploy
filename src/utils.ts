@@ -24,14 +24,13 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
                 removeListeners();
                 reject(err);
             };
-            const onClose = (code: number) => {
+            const onClose = (code: number | null) => {
                 removeListeners();
                 switch (code) {
                     case 0:
                         resolve();
                         break;
                     case null:
-                    case undefined:
                         reject(new Error(`Command "${cmd}" terminated abnormally`));
                         break;
                     default:
