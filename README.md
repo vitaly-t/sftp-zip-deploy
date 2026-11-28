@@ -7,6 +7,7 @@ Fast single-zip deployment over SFTP for your project's distribution folder:
 
 - It zips your distribution folder and sends the archive to your server via SFTP
 - It supports remote commands for before / after zip deployment, via SSH2
+- It supports both ubiquitous ZIP and the more efficient 7-ZIP
 - It provides details about what is going on all the way
 
 ## Rationale
@@ -16,7 +17,7 @@ especially for large projects.
 
 For example, my project that produced about 100 files for distribution, was taking about
 4 minutes to re-deploy, while on 1Gbt Internet. Switching over to this single-zip deployment
-brought the time to under 10 seconds.
+brought the time down to 10 seconds.
 
 ## Install
 
@@ -44,7 +45,7 @@ await zipAndDeploy({
         password: '#########'
     },
     // Settings below are optional
-    zipFile: './release.zip', // this is the default
+    zipFile: './release.zip', // this is the default (supports .7z extension)
     cmd: {
         // remote command to execute after zip deployment:
         after: 'cd /root/web && unzip -o release.zip && npm i --omit=dev'
@@ -66,7 +67,7 @@ The main interface [ISftpZipDeployConfig] has a number of options, including eve
 * [onCmdOutput] - gets output from all remote commands
 * [onUploadStep] - tracks zip upload progress
 
-Below is example of using the full potential of the events supported:
+Below is an example of using the full potential of the events supported:
 
 ```ts
 {
