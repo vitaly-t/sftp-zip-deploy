@@ -134,9 +134,9 @@ within `cmd.after`, where `-y` is to avoid input prompts.
 In addition, only 7-zip archiving supports progress tracking (option `onProgress` in `I7zipOptions`),
 which is important for large deployments.
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L83
-[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L105
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L128
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L147
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L82
+[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L104
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L127
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L146
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L10
-[IZipDeploySummary]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L153
+[IZipDeploySummary]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L152

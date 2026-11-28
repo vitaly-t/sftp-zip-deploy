@@ -39,11 +39,10 @@ export interface ISftpZipDeployConfig {
     zipFile?: string;
 
     /**
-     * Options to be passed into `zip-a-folder` library
-     * when creating a zip:
+     * Options to be passed into the archiving engine:
      *
      *  - type `ZipArchiveOptions` is used for ZIP compression;
-     *  - type `I7zipOptions` is used for 7Z compression.
+     *  - type `I7zipOptions` is used for 7-zip compression.
      */
     zipOptions?: ZipArchiveOptions | I7zipOptions;
 
