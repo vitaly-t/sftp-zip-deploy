@@ -5,6 +5,7 @@ import path from 'node:path';
 import {executeCommand, fixWindowsPath} from './utils.js';
 import {zip, ZipArchiveOptions} from 'zip-a-folder';
 import {I7zipOptions, pack7z} from './7z.js';
+import fs from 'fs/promises';
 
 export {I7zipOptions} from './7z.js';
 export {ISftpZipDeployConfig, IZipDeploySummary, ZipType} from './types.js';
@@ -41,8 +42,9 @@ export async function zipAndDeploy(cfg: ISftpZipDeployConfig): Promise<IZipDeplo
             await executeCommand(sftp, before, (err, std) => cfg.onCmdOutput?.call(cfg, {cmd: before, err, std, zt}));
         }
         await mkdir(path.dirname(zipPath), {recursive: true});
-        let count = 0;
+        let count: number;
         if (zt === '7z') {
+            await fs.rm(zipPath, {force: true});
             count = (await pack7z(cfg.srcDir, zipPath, cfg.zipOptions as I7zipOptions)).count;
         } else {
             count = (await zip(cfg.srcDir, zipPath, cfg.zipOptions as ZipArchiveOptions)).count;
