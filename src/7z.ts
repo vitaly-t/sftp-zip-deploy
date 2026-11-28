@@ -20,9 +20,6 @@ export interface I7zipOptions {
 
     /**
      * Tracks archive packing progress, in percent.
-     *
-     * It is only invoked when building large archives,
-     * while for small archives it may never be called.
      */
     onProgress?: (percent: number) => void;
 }
@@ -51,6 +48,11 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
         if (tracking) {
             commands.push('-aoa', '-bsp1');
         }
+        let lastProgress = 0;
+        const notifyProgress = (percent: number) => {
+            lastProgress = percent;
+            opt?.onProgress?.(percent);
+        };
         const proc = spawn(path7z, [...commands, zipPath, patch7zDir(srcDir)], {windowsHide: true});
         const removeListeners = () => {
             proc.off('error', onError);
@@ -68,6 +70,9 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             removeListeners();
             switch (code) {
                 case 0:
+                    if (tracking && lastProgress < 100) {
+                        notifyProgress(100);
+                    }
                     resolve({count});
                     break;
                 case null:
@@ -87,7 +92,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
             if (tracking) {
                 const a = s.match(/^(\d+)%\s/);
                 if (a) {
-                    opt.onProgress?.(parseInt(a[1]));
+                    notifyProgress(parseInt(a[1]));
                 }
             }
         };
