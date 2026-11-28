@@ -1,6 +1,6 @@
 {
   "name": "sftp-zip-deploy",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "description": "Zip and deploy a folder via SFTP",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
