@@ -28,11 +28,7 @@ export interface I7zipOptions {
  * Compresses a folder into a 7-zip file as specified in the path,
  * and resolves with the number of files in the new archive.
  *
- * @private
- *
- * @param srcDir
- * @param zipPath
- * @param opt
+ * @internal
  */
 export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Promise<{ count: number }> {
     return new Promise((resolve, reject) => {
@@ -110,7 +106,7 @@ export function pack7z(srcDir: string, zipPath: string, opt?: I7zipOptions): Pro
  * In order to avoid it, the directory needs to end with `/*`.
  * This function makes sure, in a safe way, that it is always the case.
  *
- * @private
+ * @internal
  */
 export function patch7zDir(dir: string) {
     return dir.replace(/[\\\/*]*$/, '/*');

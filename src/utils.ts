@@ -1,6 +1,11 @@
 import SftpClient from 'ssh2-sftp-client';
 import {Client as SSH2Client} from 'ssh2';
 
+/**
+ * Executes SSH2 command.
+ *
+ * @internal
+ */
 export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buffer, std?: Buffer) => void): Promise<void> {
     const client = (sftp as any).client as SSH2Client; // overriding ssh2-sftp-client (see issue #595 there)
     if (client?.constructor?.name !== 'Client') {
@@ -55,6 +60,8 @@ export function executeCommand(sftp: SftpClient, cmd: string, output: (err?: Buf
 
 /**
  * Fixes Windows paths, by replacing every '\' with '/'
+ *
+ * @internal
  */
 export function fixWindowsPath(path: string): string {
     return path.replace(/\\/g, '/');
