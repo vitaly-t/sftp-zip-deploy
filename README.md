@@ -131,9 +131,12 @@ while for zip it is a ubiquitous default.
 For example, typical for Linux is `p7zip-full` package, and then you can use `7z x -y release.7z`
 within `cmd.after`, where `-y` is to avoid input prompts.
 
-[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L80
-[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L102
-[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L125
-[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L144
+In addition, only 7-zip archiving supports progress tracking (option `onProgress` in `I7zipOptions`),
+which is important for large deployments.
+
+[onZipReady]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L83
+[onZipDeployed]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L105
+[onCmdOutput]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L128
+[onUploadStep]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L147
 [ISftpZipDeployConfig]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L10
-[IZipDeploySummary]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L150
+[IZipDeploySummary]:https://github.com/vitaly-t/sftp-zip-deploy/blob/main/src/types.ts#L153
